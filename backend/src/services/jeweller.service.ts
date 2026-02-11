@@ -1,54 +1,35 @@
-import pool from '../config/database';
+import { User, Wallet, Transaction, GoldBooking, GoldPriceConfig, Jeweller } from '../models';
 import logger from '../utils/logger';
 
 export const getDashboardStats = async (jewellerId: string) => {
     try {
-        // Get total customers
-        const customersResult = await pool.query(
-            `SELECT COUNT(*) as total FROM users 
-             WHERE jeweller_id = $1 AND role = 'CUSTOMER'`,
-            [jewellerId]
-        );
-
-        // Get total revenue from transactions
-        const revenueResult = await pool.query(
-            `SELECT COALESCE(SUM(amount), 0) as total 
-             FROM transactions 
-             WHERE jeweller_id = $1 AND status = 'SUCCESS'`,
-            [jewellerId]
-        );
-
-        // Get total gold sold
-        const goldResult = await pool.query(
-            `SELECT COALESCE(SUM(gold_grams), 0) as total 
-             FROM gold_bookings 
-             WHERE jeweller_id = $1 AND status = 'ACTIVE'`,
-            [jewellerId]
-        );
-
-        // Get active bookings count
-        const bookingsResult = await pool.query(
-            `SELECT COUNT(*) as total 
-             FROM gold_bookings 
-             WHERE jeweller_id = $1 AND status = 'ACTIVE'`,
-            [jewellerId]
-        );
-
-        // Get today's transactions count
-        const todayResult = await pool.query(
-            `SELECT COUNT(*) as total 
-             FROM transactions 
-             WHERE jeweller_id = $1 
-             AND DATE(created_at) = CURRENT_DATE`,
-            [jewellerId]
-        );
+        const [totalCustomers, totalRevenue, totalGoldSold, activeBookings, todayTransactions] =
+            await Promise.all([
+                User.countDocuments({ jeweller_id: jewellerId, role: 'CUSTOMER' }),
+                Transaction.aggregate([
+                    { $match: { jeweller_id: jewellerId, status: 'SUCCESS' } },
+                    { $group: { _id: null, total: { $sum: '$amount' } } },
+                ]),
+                GoldBooking.aggregate([
+                    { $match: { jeweller_id: jewellerId, status: 'ACTIVE' } },
+                    { $group: { _id: null, total: { $sum: '$gold_grams' } } },
+                ]),
+                GoldBooking.countDocuments({ jeweller_id: jewellerId, status: 'ACTIVE' }),
+                Transaction.countDocuments({
+                    jeweller_id: jewellerId,
+                    created_at: {
+                        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+                    },
+                }),
+            ]);
 
         return {
-            totalCustomers: parseInt(customersResult.rows[0].total),
-            totalRevenue: parseFloat(revenueResult.rows[0].total),
-            totalGoldSold: parseFloat(goldResult.rows[0].total),
-            activeBookings: parseInt(bookingsResult.rows[0].total),
-            todayTransactions: parseInt(todayResult.rows[0].total),
+            totalCustomers,
+            totalRevenue: totalRevenue[0]?.total || 0,
+            totalGoldSold: totalGoldSold[0]?.total || 0,
+            activeBookings,
+            todayTransactions,
         };
     } catch (error) {
         logger.error('Error in getDashboardStats:', error);
@@ -58,24 +39,28 @@ export const getDashboardStats = async (jewellerId: string) => {
 
 export const getAllCustomers = async (jewellerId: string) => {
     try {
-        const result = await pool.query(
-            `SELECT 
-                u.id,
-                u.name,
-                u.phone_number,
-                u.state,
-                u.city,
-                u.created_at,
-                COALESCE(w.balance, 0) as wallet_balance,
-                COALESCE(w.gold_grams, 0) as gold_grams
-             FROM users u
-             LEFT JOIN wallet w ON u.id = w.user_id
-             WHERE u.jeweller_id = $1 AND u.role = 'CUSTOMER'
-             ORDER BY u.created_at DESC`,
-            [jewellerId]
-        );
+        const users = await User.find({ jeweller_id: jewellerId, role: 'CUSTOMER' })
+            .sort({ created_at: -1 })
+            .lean();
 
-        return result.rows;
+        // Get wallets for all users
+        const userIds = users.map((u) => u._id);
+        const wallets = await Wallet.find({ user_id: { $in: userIds } }).lean();
+        const walletMap = new Map(wallets.map((w) => [w.user_id.toString(), w]));
+
+        return users.map((u: any) => {
+            const wallet = walletMap.get(u._id.toString());
+            return {
+                id: u._id,
+                name: u.name,
+                phone_number: u.phone_number,
+                state: u.state,
+                city: u.city,
+                created_at: u.created_at,
+                wallet_balance: wallet?.balance || 0,
+                gold_grams: wallet?.gold_grams || 0,
+            };
+        });
     } catch (error) {
         logger.error('Error in getAllCustomers:', error);
         throw error;
@@ -84,48 +69,40 @@ export const getAllCustomers = async (jewellerId: string) => {
 
 export const getCustomerDetails = async (jewellerId: string, customerId: string) => {
     try {
-        // Get customer info
-        const customerResult = await pool.query(
-            `SELECT 
-                u.id,
-                u.name,
-                u.phone_number,
-                u.state,
-                u.city,
-                u.created_at,
-                COALESCE(w.balance, 0) as wallet_balance,
-                COALESCE(w.gold_grams, 0) as gold_grams
-             FROM users u
-             LEFT JOIN wallet w ON u.id = w.user_id
-             WHERE u.id = $1 AND u.jeweller_id = $2 AND u.role = 'CUSTOMER'`,
-            [customerId, jewellerId]
-        );
+        const user = await User.findOne({
+            _id: customerId,
+            jeweller_id: jewellerId,
+            role: 'CUSTOMER',
+        }).lean();
 
-        if (customerResult.rows.length === 0) {
+        if (!user) {
             throw new Error('Customer not found');
         }
 
-        // Get customer transactions
-        const transactionsResult = await pool.query(
-            `SELECT * FROM transactions 
-             WHERE user_id = $1 AND jeweller_id = $2
-             ORDER BY created_at DESC
-             LIMIT 10`,
-            [customerId, jewellerId]
-        );
-
-        // Get customer bookings
-        const bookingsResult = await pool.query(
-            `SELECT * FROM gold_bookings 
-             WHERE user_id = $1 AND jeweller_id = $2
-             ORDER BY booked_at DESC`,
-            [customerId, jewellerId]
-        );
+        const [wallet, transactions, bookings] = await Promise.all([
+            Wallet.findOne({ user_id: customerId }).lean(),
+            Transaction.find({ user_id: customerId, jeweller_id: jewellerId })
+                .sort({ created_at: -1 })
+                .limit(10)
+                .lean(),
+            GoldBooking.find({ user_id: customerId, jeweller_id: jewellerId })
+                .sort({ booked_at: -1 })
+                .lean(),
+        ]);
 
         return {
-            customer: customerResult.rows[0],
-            transactions: transactionsResult.rows,
-            bookings: bookingsResult.rows,
+            customer: {
+                id: user._id,
+                name: user.name,
+                phone_number: user.phone_number,
+                state: user.state,
+                city: user.city,
+                created_at: user.created_at,
+                wallet_balance: wallet?.balance || 0,
+                gold_grams: wallet?.gold_grams || 0,
+            },
+            transactions,
+            bookings,
         };
     } catch (error) {
         logger.error('Error in getCustomerDetails:', error);
@@ -135,18 +112,15 @@ export const getCustomerDetails = async (jewellerId: string, customerId: string)
 
 export const getAllTransactions = async (jewellerId: string) => {
     try {
-        const result = await pool.query(
-            `SELECT 
-                t.*,
-                u.name as user_name
-             FROM transactions t
-             JOIN users u ON t.user_id = u.id
-             WHERE t.jeweller_id = $1
-             ORDER BY t.created_at DESC`,
-            [jewellerId]
-        );
+        const transactions = await Transaction.find({ jeweller_id: jewellerId })
+            .sort({ created_at: -1 })
+            .populate('user_id', 'name')
+            .lean();
 
-        return result.rows;
+        return transactions.map((t: any) => ({
+            ...t,
+            user_name: t.user_id?.name,
+        }));
     } catch (error) {
         logger.error('Error in getAllTransactions:', error);
         throw error;
@@ -155,18 +129,15 @@ export const getAllTransactions = async (jewellerId: string) => {
 
 export const getAllBookings = async (jewellerId: string) => {
     try {
-        const result = await pool.query(
-            `SELECT 
-                b.*,
-                u.name as user_name
-             FROM gold_bookings b
-             JOIN users u ON b.user_id = u.id
-             WHERE b.jeweller_id = $1
-             ORDER BY b.booked_at DESC`,
-            [jewellerId]
-        );
+        const bookings = await GoldBooking.find({ jeweller_id: jewellerId })
+            .sort({ booked_at: -1 })
+            .populate('user_id', 'name')
+            .lean();
 
-        return result.rows;
+        return bookings.map((b: any) => ({
+            ...b,
+            user_name: b.user_id?.name,
+        }));
     } catch (error) {
         logger.error('Error in getAllBookings:', error);
         throw error;
@@ -181,28 +152,27 @@ export const updateGoldPrice = async (
     marginFixed: number
 ) => {
     try {
-        // Calculate final price
         const finalPrice = baseMcxPrice + (baseMcxPrice * marginPercent / 100) + marginFixed;
 
-        // Insert or update today's price
-        const result = await pool.query(
-            `INSERT INTO gold_price_config 
-                (jeweller_id, base_mcx_price, jeweller_margin_percent, jeweller_margin_fixed, final_price, effective_date, updated_by)
-             VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
-             ON CONFLICT (jeweller_id, effective_date)
-             DO UPDATE SET
-                base_mcx_price = $2,
-                jeweller_margin_percent = $3,
-                jeweller_margin_fixed = $4,
-                final_price = $5,
-                updated_by = $6
-             RETURNING *`,
-            [jewellerId, baseMcxPrice, marginPercent, marginFixed, finalPrice, userId]
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const priceConfig = await GoldPriceConfig.findOneAndUpdate(
+            { jeweller_id: jewellerId, effective_date: today },
+            {
+                jeweller_id: jewellerId,
+                base_mcx_price: baseMcxPrice,
+                jeweller_margin_percent: marginPercent,
+                jeweller_margin_fixed: marginFixed,
+                final_price: finalPrice,
+                effective_date: today,
+                updated_by: userId,
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
         logger.info(`Gold price updated for jeweller ${jewellerId}: ₹${finalPrice}/g`);
-
-        return result.rows[0];
+        return priceConfig;
     } catch (error) {
         logger.error('Error in updateGoldPrice:', error);
         throw error;

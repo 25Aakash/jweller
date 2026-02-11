@@ -1,5 +1,5 @@
 import app from './app';
-import pool from './config/database';
+import { connectDatabase, disconnectDatabase } from './config/database';
 import logger from './utils/logger';
 import dotenv from 'dotenv';
 
@@ -7,22 +7,11 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-// Test database connection
-const testDatabaseConnection = async (): Promise<void> => {
-    try {
-        await pool.query('SELECT NOW()');
-        logger.info('✅ Database connection successful');
-    } catch (error) {
-        logger.error('❌ Database connection failed:', error);
-        process.exit(1);
-    }
-};
-
 // Start server
 const startServer = async (): Promise<void> => {
     try {
-        // Test database connection
-        await testDatabaseConnection();
+        // Connect to MongoDB
+        await connectDatabase();
 
         // Start listening
         const server = app.listen(PORT, () => {
@@ -39,7 +28,7 @@ const startServer = async (): Promise<void> => {
                 logger.info('HTTP server closed');
 
                 try {
-                    await pool.end();
+                    await disconnectDatabase();
                     logger.info('Database connections closed');
                     process.exit(0);
                 } catch (error) {

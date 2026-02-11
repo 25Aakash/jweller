@@ -1,4 +1,5 @@
-import pool, { transaction } from '../config/database';
+import mongoose from 'mongoose';
+import { GoldBooking, Transaction } from '../models';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import logger from '../utils/logger';
 import { getCurrentGoldPrice, calculateGoldGrams } from './gold-price.service';
@@ -17,35 +18,31 @@ export const createGoldBooking = async (
             throw new ValidationError('Amount must be greater than 0');
         }
 
-        return await transaction(async (client) => {
-            // Get current gold price
-            const priceConfig = await getCurrentGoldPrice(jewellerId);
-            const lockedPricePerGram = priceConfig.final_price;
+        // Get current gold price
+        const priceConfig = await getCurrentGoldPrice(jewellerId);
+        const lockedPricePerGram = priceConfig.final_price;
 
-            // Calculate gold grams
-            const { grams } = await calculateGoldGrams(jewellerId, amount);
+        // Calculate gold grams
+        const { grams } = await calculateGoldGrams(jewellerId, amount);
 
-            // Create booking
-            const bookingResult = await client.query(
-                `INSERT INTO gold_bookings 
-         (user_id, jeweller_id, amount_paid, gold_grams, locked_price_per_gram, status)
-         VALUES ($1, $2, $3, $4, $5, 'ACTIVE')
-         RETURNING *`,
-                [userId, jewellerId, amount, grams, lockedPricePerGram]
-            );
-
-            const booking = bookingResult.rows[0];
-
-            // Deduct from wallet (this also creates a transaction record)
-            await deductMoneyFromWallet(userId, jewellerId, amount, booking.id);
-
-            // Add gold to wallet
-            await addGoldToWallet(userId, jewellerId, grams);
-
-            logger.info(`Gold booking created: ${booking.id} for user ${userId}`);
-
-            return booking;
+        // Create booking
+        const booking = await GoldBooking.create({
+            user_id: userId,
+            jeweller_id: jewellerId,
+            amount_paid: amount,
+            gold_grams: grams,
+            locked_price_per_gram: lockedPricePerGram,
+            status: 'ACTIVE',
         });
+
+        // Deduct from wallet (this also creates a transaction record)
+        await deductMoneyFromWallet(userId, jewellerId, amount, booking._id.toString());
+
+        // Add gold to wallet
+        await addGoldToWallet(userId, jewellerId, grams);
+
+        logger.info(`Gold booking created: ${booking._id} for user ${userId}`);
+        return booking;
     } catch (error) {
         logger.error('Error in createGoldBooking:', error);
         throw error;
@@ -62,15 +59,13 @@ export const getUserBookings = async (
     offset: number = 0
 ): Promise<any[]> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM gold_bookings 
-       WHERE user_id = $1 AND jeweller_id = $2
-       ORDER BY booked_at DESC
-       LIMIT $3 OFFSET $4`,
-            [userId, jewellerId, limit, offset]
-        );
+        const bookings = await GoldBooking.find({ user_id: userId, jeweller_id: jewellerId })
+            .sort({ booked_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .lean();
 
-        return result.rows;
+        return bookings;
     } catch (error) {
         logger.error('Error in getUserBookings:', error);
         throw error;
@@ -85,17 +80,13 @@ export const getBookingById = async (
     jewellerId: string
 ): Promise<any> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM gold_bookings 
-       WHERE id = $1 AND jeweller_id = $2`,
-            [bookingId, jewellerId]
-        );
+        const booking = await GoldBooking.findOne({ _id: bookingId, jeweller_id: jewellerId }).lean();
 
-        if (result.rows.length === 0) {
+        if (!booking) {
             throw new NotFoundError('Booking not found');
         }
 
-        return result.rows[0];
+        return booking;
     } catch (error) {
         logger.error('Error in getBookingById:', error);
         throw error;
@@ -112,26 +103,23 @@ export const getAllBookings = async (
     offset: number = 0
 ): Promise<any[]> => {
     try {
-        let query = `
-      SELECT b.*, u.name as user_name, u.phone_number 
-      FROM gold_bookings b
-      JOIN users u ON b.user_id = u.id
-      WHERE b.jeweller_id = $1
-    `;
-        const params: any[] = [jewellerId];
-
+        const filter: any = { jeweller_id: jewellerId };
         if (status) {
-            query += ` AND b.status = $2`;
-            params.push(status);
-            query += ` ORDER BY b.booked_at DESC LIMIT $3 OFFSET $4`;
-            params.push(limit, offset);
-        } else {
-            query += ` ORDER BY b.booked_at DESC LIMIT $2 OFFSET $3`;
-            params.push(limit, offset);
+            filter.status = status;
         }
 
-        const result = await pool.query(query, params);
-        return result.rows;
+        const bookings = await GoldBooking.find(filter)
+            .sort({ booked_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .populate('user_id', 'name phone_number')
+            .lean();
+
+        return bookings.map((b: any) => ({
+            ...b,
+            user_name: b.user_id?.name,
+            phone_number: b.user_id?.phone_number,
+        }));
     } catch (error) {
         logger.error('Error in getAllBookings:', error);
         throw error;
@@ -147,20 +135,18 @@ export const updateBookingStatus = async (
     status: 'ACTIVE' | 'REDEEMED' | 'CANCELLED'
 ): Promise<any> => {
     try {
-        const result = await pool.query(
-            `UPDATE gold_bookings 
-       SET status = $1, updated_at = NOW()
-       WHERE id = $2 AND jeweller_id = $3
-       RETURNING *`,
-            [status, bookingId, jewellerId]
+        const booking = await GoldBooking.findOneAndUpdate(
+            { _id: bookingId, jeweller_id: jewellerId },
+            { status },
+            { new: true }
         );
 
-        if (result.rows.length === 0) {
+        if (!booking) {
             throw new NotFoundError('Booking not found');
         }
 
         logger.info(`Booking ${bookingId} status updated to ${status}`);
-        return result.rows[0];
+        return booking;
     } catch (error) {
         logger.error('Error in updateBookingStatus:', error);
         throw error;
@@ -172,20 +158,37 @@ export const updateBookingStatus = async (
  */
 export const getBookingStatistics = async (jewellerId: string): Promise<any> => {
     try {
-        const result = await pool.query(
-            `SELECT 
-        COUNT(*) as total_bookings,
-        SUM(amount_paid) as total_amount,
-        SUM(gold_grams) as total_gold_grams,
-        COUNT(CASE WHEN status = 'ACTIVE' THEN 1 END) as active_bookings,
-        COUNT(CASE WHEN status = 'REDEEMED' THEN 1 END) as redeemed_bookings,
-        COUNT(CASE WHEN status = 'CANCELLED' THEN 1 END) as cancelled_bookings
-       FROM gold_bookings 
-       WHERE jeweller_id = $1`,
-            [jewellerId]
-        );
+        const stats = await GoldBooking.aggregate([
+            { $match: { jeweller_id: jewellerId } },
+            {
+                $group: {
+                    _id: null,
+                    total_bookings: { $sum: 1 },
+                    total_amount: { $sum: '$amount_paid' },
+                    total_gold_grams: { $sum: '$gold_grams' },
+                    active_bookings: {
+                        $sum: { $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0] },
+                    },
+                    redeemed_bookings: {
+                        $sum: { $cond: [{ $eq: ['$status', 'REDEEMED'] }, 1, 0] },
+                    },
+                    cancelled_bookings: {
+                        $sum: { $cond: [{ $eq: ['$status', 'CANCELLED'] }, 1, 0] },
+                    },
+                },
+            },
+        ]);
 
-        return result.rows[0];
+        return (
+            stats[0] || {
+                total_bookings: 0,
+                total_amount: 0,
+                total_gold_grams: 0,
+                active_bookings: 0,
+                redeemed_bookings: 0,
+                cancelled_bookings: 0,
+            }
+        );
     } catch (error) {
         logger.error('Error in getBookingStatistics:', error);
         throw error;

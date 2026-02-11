@@ -1,4 +1,5 @@
-import pool, { transaction } from '../config/database';
+import mongoose from 'mongoose';
+import { Wallet, Transaction } from '../models';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import logger from '../utils/logger';
 
@@ -7,17 +8,13 @@ import logger from '../utils/logger';
  */
 export const getWallet = async (userId: string, jewellerId: string): Promise<any> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM wallet 
-       WHERE user_id = $1 AND jeweller_id = $2`,
-            [userId, jewellerId]
-        );
+        const wallet = await Wallet.findOne({ user_id: userId, jeweller_id: jewellerId });
 
-        if (result.rows.length === 0) {
+        if (!wallet) {
             throw new NotFoundError('Wallet not found');
         }
 
-        return result.rows[0];
+        return wallet;
     } catch (error) {
         logger.error('Error in getWallet:', error);
         throw error;
@@ -34,39 +31,48 @@ export const addMoneyToWallet = async (
     transactionRef: string,
     paymentGatewayResponse?: any
 ): Promise<any> => {
+    const session = await mongoose.startSession();
     try {
         if (amount <= 0) {
             throw new ValidationError('Amount must be greater than 0');
         }
 
-        return await transaction(async (client) => {
-            // Update wallet balance
-            const walletResult = await client.query(
-                `UPDATE wallet 
-         SET balance = balance + $1, updated_at = NOW()
-         WHERE user_id = $2 AND jeweller_id = $3
-         RETURNING *`,
-                [amount, userId, jewellerId]
-            );
+        session.startTransaction();
 
-            if (walletResult.rows.length === 0) {
-                throw new NotFoundError('Wallet not found');
-            }
+        const wallet = await Wallet.findOneAndUpdate(
+            { user_id: userId, jeweller_id: jewellerId },
+            { $inc: { balance: amount } },
+            { new: true, session }
+        );
 
-            // Record transaction
-            await client.query(
-                `INSERT INTO transactions 
-         (user_id, jeweller_id, transaction_ref, amount, type, status, payment_gateway_response)
-         VALUES ($1, $2, $3, $4, 'WALLET_CREDIT', 'SUCCESS', $5)`,
-                [userId, jewellerId, transactionRef, amount, JSON.stringify(paymentGatewayResponse || {})]
-            );
+        if (!wallet) {
+            throw new NotFoundError('Wallet not found');
+        }
 
-            logger.info(`Added ₹${amount} to wallet for user ${userId}`);
-            return walletResult.rows[0];
-        });
+        await Transaction.create(
+            [
+                {
+                    user_id: userId,
+                    jeweller_id: jewellerId,
+                    transaction_ref: transactionRef,
+                    amount,
+                    type: 'WALLET_CREDIT',
+                    status: 'SUCCESS',
+                    payment_gateway_response: paymentGatewayResponse || {},
+                },
+            ],
+            { session }
+        );
+
+        await session.commitTransaction();
+        logger.info(`Added ₹${amount} to wallet for user ${userId}`);
+        return wallet;
     } catch (error) {
+        await session.abortTransaction();
         logger.error('Error in addMoneyToWallet:', error);
         throw error;
+    } finally {
+        session.endSession();
     }
 };
 
@@ -79,50 +85,50 @@ export const deductMoneyFromWallet = async (
     amount: number,
     bookingId: string
 ): Promise<any> => {
+    const session = await mongoose.startSession();
     try {
         if (amount <= 0) {
             throw new ValidationError('Amount must be greater than 0');
         }
 
-        return await transaction(async (client) => {
-            // Check wallet balance
-            const walletCheck = await client.query(
-                `SELECT balance FROM wallet 
-         WHERE user_id = $1 AND jeweller_id = $2`,
-                [userId, jewellerId]
-            );
+        session.startTransaction();
 
-            if (walletCheck.rows.length === 0) {
-                throw new NotFoundError('Wallet not found');
-            }
+        const wallet = await Wallet.findOne({ user_id: userId, jeweller_id: jewellerId }).session(session);
 
-            if (walletCheck.rows[0].balance < amount) {
-                throw new ValidationError('Insufficient wallet balance');
-            }
+        if (!wallet) {
+            throw new NotFoundError('Wallet not found');
+        }
 
-            // Deduct from wallet
-            const walletResult = await client.query(
-                `UPDATE wallet 
-         SET balance = balance - $1, updated_at = NOW()
-         WHERE user_id = $2 AND jeweller_id = $3
-         RETURNING *`,
-                [amount, userId, jewellerId]
-            );
+        if (wallet.balance < amount) {
+            throw new ValidationError('Insufficient wallet balance');
+        }
 
-            // Record transaction
-            await client.query(
-                `INSERT INTO transactions 
-         (user_id, jeweller_id, booking_id, amount, type, status)
-         VALUES ($1, $2, $3, $4, 'GOLD_BOOKING', 'SUCCESS')`,
-                [userId, jewellerId, bookingId, amount]
-            );
+        wallet.balance -= amount;
+        await wallet.save({ session });
 
-            logger.info(`Deducted ₹${amount} from wallet for user ${userId}`);
-            return walletResult.rows[0];
-        });
+        await Transaction.create(
+            [
+                {
+                    user_id: userId,
+                    jeweller_id: jewellerId,
+                    booking_id: bookingId,
+                    amount,
+                    type: 'GOLD_BOOKING',
+                    status: 'SUCCESS',
+                },
+            ],
+            { session }
+        );
+
+        await session.commitTransaction();
+        logger.info(`Deducted ₹${amount} from wallet for user ${userId}`);
+        return wallet;
     } catch (error) {
+        await session.abortTransaction();
         logger.error('Error in deductMoneyFromWallet:', error);
         throw error;
+    } finally {
+        session.endSession();
     }
 };
 
@@ -139,20 +145,18 @@ export const addGoldToWallet = async (
             throw new ValidationError('Gold grams must be greater than 0');
         }
 
-        const result = await pool.query(
-            `UPDATE wallet 
-       SET gold_grams = gold_grams + $1, updated_at = NOW()
-       WHERE user_id = $2 AND jeweller_id = $3
-       RETURNING *`,
-            [goldGrams, userId, jewellerId]
+        const wallet = await Wallet.findOneAndUpdate(
+            { user_id: userId, jeweller_id: jewellerId },
+            { $inc: { gold_grams: goldGrams } },
+            { new: true }
         );
 
-        if (result.rows.length === 0) {
+        if (!wallet) {
             throw new NotFoundError('Wallet not found');
         }
 
         logger.info(`Added ${goldGrams}g gold to wallet for user ${userId}`);
-        return result.rows[0];
+        return wallet;
     } catch (error) {
         logger.error('Error in addGoldToWallet:', error);
         throw error;
@@ -169,15 +173,13 @@ export const getTransactionHistory = async (
     offset: number = 0
 ): Promise<any[]> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM transactions 
-       WHERE user_id = $1 AND jeweller_id = $2
-       ORDER BY created_at DESC
-       LIMIT $3 OFFSET $4`,
-            [userId, jewellerId, limit, offset]
-        );
+        const transactions = await Transaction.find({ user_id: userId, jeweller_id: jewellerId })
+            .sort({ created_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .lean();
 
-        return result.rows;
+        return transactions;
     } catch (error) {
         logger.error('Error in getTransactionHistory:', error);
         throw error;
@@ -193,17 +195,19 @@ export const getAllTransactions = async (
     offset: number = 0
 ): Promise<any[]> => {
     try {
-        const result = await pool.query(
-            `SELECT t.*, u.name as user_name, u.phone_number 
-       FROM transactions t
-       JOIN users u ON t.user_id = u.id
-       WHERE t.jeweller_id = $1
-       ORDER BY t.created_at DESC
-       LIMIT $2 OFFSET $3`,
-            [jewellerId, limit, offset]
-        );
+        const transactions = await Transaction.find({ jeweller_id: jewellerId })
+            .sort({ created_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .populate('user_id', 'name phone_number')
+            .lean();
 
-        return result.rows;
+        // Map to match expected format
+        return transactions.map((t: any) => ({
+            ...t,
+            user_name: t.user_id?.name,
+            phone_number: t.user_id?.phone_number,
+        }));
     } catch (error) {
         logger.error('Error in getAllTransactions:', error);
         throw error;

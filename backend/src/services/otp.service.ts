@@ -1,4 +1,4 @@
-import pool from '../config/database';
+import { OtpVerification } from '../models';
 import { sendSMS } from '../config/sms';
 import { ValidationError, RateLimitError } from '../utils/errors';
 import { isValidPhoneNumber, normalizePhoneNumber } from '../utils/validators';
@@ -27,7 +27,6 @@ export const sendOTP = async (
     jewellerId: string
 ): Promise<{ success: boolean; expiresAt: Date }> => {
     try {
-        // Validate phone number
         if (!isValidPhoneNumber(phoneNumber)) {
             throw new ValidationError('Invalid phone number format');
         }
@@ -35,31 +34,27 @@ export const sendOTP = async (
         const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
         // Check rate limiting (max 3 OTPs per phone in 15 minutes)
-        const rateLimitCheck = await pool.query(
-            `SELECT COUNT(*) as count 
-       FROM otp_verifications 
-       WHERE phone_number = $1 
-       AND jeweller_id = $2 
-       AND created_at > NOW() - INTERVAL '15 minutes'`,
-            [normalizedPhone, jewellerId]
-        );
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        const recentCount = await OtpVerification.countDocuments({
+            phone_number: normalizedPhone,
+            jeweller_id: jewellerId,
+            created_at: { $gt: fifteenMinutesAgo },
+        });
 
-        if (parseInt(rateLimitCheck.rows[0].count) >= 3) {
+        if (recentCount >= 3) {
             throw new RateLimitError('Too many OTP requests. Please try again later.');
         }
 
-        // Generate OTP
         const otpCode = generateOTP();
         const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-        // Store OTP in database
-        await pool.query(
-            `INSERT INTO otp_verifications (phone_number, otp_code, jeweller_id, expires_at)
-       VALUES ($1, $2, $3, $4)`,
-            [normalizedPhone, otpCode, jewellerId, expiresAt]
-        );
+        await OtpVerification.create({
+            phone_number: normalizedPhone,
+            otp_code: otpCode,
+            jeweller_id: jewellerId,
+            expires_at: expiresAt,
+        });
 
-        // Send OTP via SMS
         const message = `Dear User, ${otpCode} is your OTP to register your Riddhi Siddhi Trading Co account. Valid for ${OTP_EXPIRY_MINUTES} minutes. Do not share it with anyone.`;
 
         try {
@@ -67,16 +62,12 @@ export const sendOTP = async (
             logger.info(`OTP sent to ${normalizedPhone}`);
         } catch (smsError) {
             logger.error('Failed to send OTP SMS:', smsError);
-            // In development, we'll continue even if SMS fails
             if (process.env.NODE_ENV !== 'development') {
                 throw new Error('Failed to send OTP. Please try again.');
             }
         }
 
-        return {
-            success: true,
-            expiresAt,
-        };
+        return { success: true, expiresAt };
     } catch (error) {
         logger.error('Error in sendOTP:', error);
         throw error;
@@ -96,55 +87,37 @@ export const verifyOTP = async (
 
         logger.info(`Verifying OTP - Phone: ${normalizedPhone}, OTP: ${otpCode}, Jeweller: ${jewellerId}`);
 
-        // Find valid OTP
-        const result = await pool.query(
-            `SELECT * FROM otp_verifications 
-       WHERE phone_number = $1 
-       AND otp_code = $2 
-       AND jeweller_id = $3 
-       AND is_verified = false 
-       AND expires_at > NOW()
-       ORDER BY created_at DESC
-       LIMIT 1`,
-            [normalizedPhone, otpCode, jewellerId]
-        );
+        const otpDoc = await OtpVerification.findOne({
+            phone_number: normalizedPhone,
+            otp_code: otpCode,
+            jeweller_id: jewellerId,
+            is_verified: false,
+            expires_at: { $gt: new Date() },
+        }).sort({ created_at: -1 });
 
-        logger.info(`OTP verification query result: ${result.rows.length} rows found`);
-
-        if (result.rows.length > 0) {
-            logger.info(`Found OTP: ${JSON.stringify(result.rows[0])}`);
-        } else {
-            // Check what OTPs exist for this phone
-            const allOtps = await pool.query(
-                `SELECT phone_number, otp_code, is_verified, expires_at > NOW() as is_valid 
-                 FROM otp_verifications 
-                 WHERE phone_number = $1 AND jeweller_id = $2 
-                 ORDER BY created_at DESC LIMIT 3`,
-                [normalizedPhone, jewellerId]
-            );
-            logger.info(`All OTPs for phone ${normalizedPhone}: ${JSON.stringify(allOtps.rows)}`);
-        }
-
-        if (result.rows.length === 0) {
+        if (!otpDoc) {
+            // Debug: check existing OTPs
+            const allOtps = await OtpVerification.find({
+                phone_number: normalizedPhone,
+                jeweller_id: jewellerId,
+            })
+                .sort({ created_at: -1 })
+                .limit(3)
+                .lean();
+            logger.info(`All OTPs for phone ${normalizedPhone}: ${JSON.stringify(allOtps)}`);
             return false;
         }
 
         // Mark OTP as verified
-        await pool.query(
-            `UPDATE otp_verifications 
-       SET is_verified = true 
-       WHERE id = $1`,
-            [result.rows[0].id]
-        );
+        otpDoc.is_verified = true;
+        await otpDoc.save();
 
         // Clean up old OTPs for this phone number
-        await pool.query(
-            `DELETE FROM otp_verifications 
-       WHERE phone_number = $1 
-       AND jeweller_id = $2 
-       AND id != $3`,
-            [normalizedPhone, jewellerId, result.rows[0].id]
-        );
+        await OtpVerification.deleteMany({
+            phone_number: normalizedPhone,
+            jeweller_id: jewellerId,
+            _id: { $ne: otpDoc._id },
+        });
 
         logger.info(`OTP verified for ${normalizedPhone}`);
         return true;
@@ -159,14 +132,16 @@ export const verifyOTP = async (
  */
 export const cleanupExpiredOTPs = async (): Promise<number> => {
     try {
-        const result = await pool.query(
-            `DELETE FROM otp_verifications 
-       WHERE expires_at < NOW() 
-       OR (is_verified = true AND created_at < NOW() - INTERVAL '1 day')`
-        );
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const result = await OtpVerification.deleteMany({
+            $or: [
+                { expires_at: { $lt: new Date() } },
+                { is_verified: true, created_at: { $lt: oneDayAgo } },
+            ],
+        });
 
-        logger.info(`Cleaned up ${result.rowCount} expired OTPs`);
-        return result.rowCount || 0;
+        logger.info(`Cleaned up ${result.deletedCount} expired OTPs`);
+        return result.deletedCount;
     } catch (error) {
         logger.error('Error in cleanupExpiredOTPs:', error);
         throw error;

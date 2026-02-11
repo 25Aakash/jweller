@@ -1,4 +1,4 @@
-import pool from '../config/database';
+import { GoldPriceConfig, Jeweller } from '../models';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import logger from '../utils/logger';
 import { fetchLiveGoldPrice } from './live-gold-price.service';
@@ -8,20 +8,18 @@ import { fetchLiveGoldPrice } from './live-gold-price.service';
  */
 export const getCurrentGoldPrice = async (jewellerId: string): Promise<any> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM gold_price_config 
-       WHERE jeweller_id = $1 
-       AND effective_date <= CURRENT_DATE
-       ORDER BY effective_date DESC
-       LIMIT 1`,
-            [jewellerId]
-        );
+        const priceConfig = await GoldPriceConfig.findOne({
+            jeweller_id: jewellerId,
+            effective_date: { $lte: new Date() },
+        })
+            .sort({ effective_date: -1 })
+            .lean();
 
-        if (result.rows.length === 0) {
+        if (!priceConfig) {
             throw new NotFoundError('Gold price not configured');
         }
 
-        return result.rows[0];
+        return priceConfig;
     } catch (error) {
         logger.error('Error in getCurrentGoldPrice:', error);
         throw error;
@@ -43,57 +41,34 @@ export const setMCXPrice = async (
         }
 
         const date = effectiveDate || new Date();
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
 
-        // Get jeweller's margin configuration
-        const jewellerResult = await pool.query(
-            `SELECT margin_percentage, margin_fixed FROM jewellers WHERE id = $1`,
-            [jewellerId]
-        );
-
-        if (jewellerResult.rows.length === 0) {
+        const jeweller = await Jeweller.findById(jewellerId).lean();
+        if (!jeweller) {
             throw new NotFoundError('Jeweller not found');
         }
 
-        const { margin_percentage, margin_fixed } = jewellerResult.rows[0];
-
-        // Calculate final price
+        const { margin_percentage, margin_fixed } = jeweller;
         const marginAmount = (baseMcxPrice * margin_percentage) / 100;
         const finalPrice = baseMcxPrice + marginAmount + margin_fixed;
 
-        // Check if price already exists for this date
-        const existingPrice = await pool.query(
-            `SELECT id FROM gold_price_config 
-       WHERE jeweller_id = $1 AND effective_date = $2`,
-            [jewellerId, date]
+        const priceConfig = await GoldPriceConfig.findOneAndUpdate(
+            { jeweller_id: jewellerId, effective_date: dayStart },
+            {
+                jeweller_id: jewellerId,
+                base_mcx_price: baseMcxPrice,
+                jeweller_margin_percent: margin_percentage,
+                jeweller_margin_fixed: margin_fixed,
+                final_price: finalPrice,
+                effective_date: dayStart,
+                updated_by: updatedBy,
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
-        let result;
-        if (existingPrice.rows.length > 0) {
-            // Update existing price
-            result = await pool.query(
-                `UPDATE gold_price_config 
-         SET base_mcx_price = $1, 
-             jeweller_margin_percent = $2,
-             jeweller_margin_fixed = $3,
-             final_price = $4,
-             updated_by = $5
-         WHERE jeweller_id = $6 AND effective_date = $7
-         RETURNING *`,
-                [baseMcxPrice, margin_percentage, margin_fixed, finalPrice, updatedBy, jewellerId, date]
-            );
-        } else {
-            // Insert new price
-            result = await pool.query(
-                `INSERT INTO gold_price_config 
-         (jeweller_id, base_mcx_price, jeweller_margin_percent, jeweller_margin_fixed, final_price, effective_date, updated_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING *`,
-                [jewellerId, baseMcxPrice, margin_percentage, margin_fixed, finalPrice, date, updatedBy]
-            );
-        }
-
         logger.info(`Gold price updated for jeweller ${jewellerId}`);
-        return result.rows[0];
+        return priceConfig;
     } catch (error) {
         logger.error('Error in setMCXPrice:', error);
         throw error;
@@ -109,44 +84,35 @@ export const updateJewellerMargin = async (
     marginFixed?: number
 ): Promise<any> => {
     try {
-        // Build update query dynamically
-        const updates: string[] = [];
-        const values: any[] = [];
-        let paramCount = 1;
+        const update: any = {};
 
         if (marginPercentage !== undefined) {
             if (marginPercentage < 0) {
                 throw new ValidationError('Margin percentage cannot be negative');
             }
-            updates.push(`margin_percentage = $${paramCount++}`);
-            values.push(marginPercentage);
+            update.margin_percentage = marginPercentage;
         }
 
         if (marginFixed !== undefined) {
-            updates.push(`margin_fixed = $${paramCount++}`);
-            values.push(marginFixed);
+            update.margin_fixed = marginFixed;
         }
 
-        if (updates.length === 0) {
+        if (Object.keys(update).length === 0) {
             throw new ValidationError('No margin values provided');
         }
 
-        values.push(jewellerId);
-
-        const result = await pool.query(
-            `UPDATE jewellers 
-       SET ${updates.join(', ')}, updated_at = NOW()
-       WHERE id = $${paramCount}
-       RETURNING *`,
-            values
+        const jeweller = await Jeweller.findByIdAndUpdate(
+            jewellerId,
+            { $set: update },
+            { new: true }
         );
 
-        if (result.rows.length === 0) {
+        if (!jeweller) {
             throw new NotFoundError('Jeweller not found');
         }
 
         logger.info(`Margin updated for jeweller ${jewellerId}`);
-        return result.rows[0];
+        return jeweller;
     } catch (error) {
         logger.error('Error in updateJewellerMargin:', error);
         throw error;
@@ -158,23 +124,16 @@ export const updateJewellerMargin = async (
  */
 export const getLiveGoldPriceForJeweller = async (jewellerId: string): Promise<any> => {
     try {
-        // Fetch live MCX/market gold price
         const liveBasePrice = await fetchLiveGoldPrice();
 
-        // Get jeweller's margin configuration
-        const jewellerResult = await pool.query(
-            `SELECT margin_percentage, margin_fixed FROM jewellers WHERE id = $1`,
-            [jewellerId]
-        );
-
-        if (jewellerResult.rows.length === 0) {
+        const jeweller = await Jeweller.findById(jewellerId).lean();
+        if (!jeweller) {
             throw new NotFoundError('Jeweller not found');
         }
 
-        const marginPercent = parseFloat(jewellerResult.rows[0].margin_percentage) || 0;
-        const marginFixed = parseFloat(jewellerResult.rows[0].margin_fixed) || 0;
+        const marginPercent = jeweller.margin_percentage || 0;
+        const marginFixed = jeweller.margin_fixed || 0;
 
-        // Calculate final price with jeweller margin
         const marginAmount = (liveBasePrice * marginPercent) / 100;
         const finalPrice = liveBasePrice + marginAmount + marginFixed;
 
@@ -188,7 +147,6 @@ export const getLiveGoldPriceForJeweller = async (jewellerId: string): Promise<a
         };
     } catch (error) {
         logger.warn('Live gold price fetch failed, falling back to DB price:', error);
-        // Fallback to DB-stored price if live fetch fails
         return getCurrentGoldPrice(jewellerId);
     }
 };
@@ -201,15 +159,12 @@ export const getGoldPriceHistory = async (
     limit: number = 30
 ): Promise<any[]> => {
     try {
-        const result = await pool.query(
-            `SELECT * FROM gold_price_config 
-       WHERE jeweller_id = $1 
-       ORDER BY effective_date DESC
-       LIMIT $2`,
-            [jewellerId, limit]
-        );
+        const history = await GoldPriceConfig.find({ jeweller_id: jewellerId })
+            .sort({ effective_date: -1 })
+            .limit(limit)
+            .lean();
 
-        return result.rows;
+        return history;
     } catch (error) {
         logger.error('Error in getGoldPriceHistory:', error);
         throw error;
