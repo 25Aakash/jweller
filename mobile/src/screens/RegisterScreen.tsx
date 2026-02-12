@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Text, ScrollView } from 'react-native';
-import { TextInput } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
-import GradientButton from '../components/GradientButton';
-import GlassCard from '../components/GlassCard';
+import { View, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Card, Text, TextInput, Button } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 
 interface Props {
@@ -12,7 +10,6 @@ interface Props {
 
 export default function RegisterScreen({ navigation }: Props) {
   const { theme, isDark } = useTheme();
-  const styles = createStyles(theme);
   const [step, setStep] = useState(1);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
@@ -23,6 +20,8 @@ export default function RegisterScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const darkCardBorder = isDark ? { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' } : {};
 
   const handleNext = () => {
     if (step === 1) {
@@ -53,8 +52,6 @@ export default function RegisterScreen({ navigation }: Props) {
   };
 
   const handleRegister = () => {
-    // Navigate to OTP with registration data
-    // Note: jewellerId is now hardcoded or set by backend for single jeweller app
     navigation.navigate('OTPVerification', {
       phoneNumber,
       name,
@@ -64,330 +61,219 @@ export default function RegisterScreen({ navigation }: Props) {
     });
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {[1, 2].map((s) => (
-        <View
-          key={s}
-          style={[
-            styles.stepDot,
-            s === step && styles.stepDotActive,
-            s < step && styles.stepDotCompleted,
-          ]}
-        >
-          <Text style={[styles.stepText, (s === step || s < step) && styles.stepTextActive]}>
-            {s}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
+  const inputStyle = { marginBottom: 14, backgroundColor: theme.colors.background.card };
+  const outlineColor = isDark ? 'rgba(255,255,255,0.12)' : theme.colors.primary.pastel;
+  const inputTheme = { colors: { onSurfaceVariant: theme.colors.text.secondary } };
 
   return (
-    <LinearGradient colors={['#FAFAFA', '#FFFFFF', '#F5F5F5']} style={styles.container}>
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
-
+    <View style={{ flex: 1, backgroundColor: theme.colors.background.primary }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <Text style={styles.emoji}>✨</Text>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join Riddhi Siddhi Trading Co.</Text>
-            </View>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20, paddingBottom: 40 }}>
+          {/* Header */}
+          <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <MaterialCommunityIcons name="account-plus" size={64} color={theme.colors.primary.main} />
+            <Text variant="headlineLarge" style={{ color: theme.colors.text.primary, fontWeight: '700', marginTop: 8 }}>
+              Create Account
+            </Text>
+            <Text variant="bodyLarge" style={{ color: theme.colors.text.secondary, marginTop: 4 }}>
+              Join Riddhi Siddhi Trading Co.
+            </Text>
+          </View>
 
-            {renderStepIndicator()}
+          {/* Step Indicator */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
+            {[1, 2].map((s) => (
+              <View
+                key={s}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: s === step || s < step ? theme.colors.primary.main : theme.colors.background.card,
+                  borderWidth: s === step || s < step ? 0 : 2,
+                  borderColor: isDark ? 'rgba(255,255,255,0.12)' : theme.colors.primary.pastel,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text variant="labelLarge" style={{ color: s === step || s < step ? '#FFF' : theme.colors.text.disabled, fontWeight: '700' }}>
+                  {s}
+                </Text>
+              </View>
+            ))}
+          </View>
 
-            <GlassCard intensity={90} style={styles.formCard}>
+          {/* Form Card */}
+          <Card style={[{
+            backgroundColor: theme.colors.background.card,
+            borderRadius: 16,
+            marginBottom: 16,
+          }, darkCardBorder]}>
+            <Card.Content style={{ paddingVertical: 24 }}>
               {step === 1 && (
                 <>
-                  <Text style={styles.stepTitle}>📱 Personal Information</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+                    <MaterialCommunityIcons name="cellphone" size={22} color={theme.colors.primary.main} />
+                    <Text variant="titleMedium" style={{ color: theme.colors.text.primary, fontWeight: '700' }}>
+                      Personal Information
+                    </Text>
+                  </View>
+
                   <TextInput
                     label="Phone Number"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     keyboardType="phone-pad"
                     mode="outlined"
-                    style={styles.input}
                     maxLength={10}
                     left={<TextInput.Icon icon="phone" color={theme.colors.primary.main} />}
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
+
                   <TextInput
                     label="Full Name"
                     value={name}
                     onChangeText={setName}
                     mode="outlined"
-                    style={styles.input}
                     left={<TextInput.Icon icon="account" color={theme.colors.primary.main} />}
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
                 </>
               )}
 
               {step === 2 && (
                 <>
-                  <Text style={styles.stepTitle}>🔐 Security & Location</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+                    <MaterialCommunityIcons name="shield-lock" size={22} color={theme.colors.primary.main} />
+                    <Text variant="titleMedium" style={{ color: theme.colors.text.primary, fontWeight: '700' }}>
+                      Security & Location
+                    </Text>
+                  </View>
+
                   <TextInput
                     label="Password"
                     value={password}
                     onChangeText={setPassword}
                     mode="outlined"
                     secureTextEntry={!showPassword}
-                    style={styles.input}
                     left={<TextInput.Icon icon="lock" color={theme.colors.primary.main} />}
                     right={
                       <TextInput.Icon
                         icon={showPassword ? 'eye-off' : 'eye'}
                         onPress={() => setShowPassword(!showPassword)}
-                        color={theme.colors.primary.main}
+                        color={theme.colors.text.secondary}
                       />
                     }
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
+
                   <TextInput
                     label="Confirm Password"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     mode="outlined"
                     secureTextEntry={!showConfirmPassword}
-                    style={styles.input}
                     left={<TextInput.Icon icon="lock-check" color={theme.colors.primary.main} />}
                     right={
                       <TextInput.Icon
                         icon={showConfirmPassword ? 'eye-off' : 'eye'}
                         onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                        color={theme.colors.primary.main}
+                        color={theme.colors.text.secondary}
                       />
                     }
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
+
                   <TextInput
                     label="State"
                     value={state}
                     onChangeText={setState}
                     mode="outlined"
-                    style={styles.input}
                     left={<TextInput.Icon icon="map-marker" color={theme.colors.primary.main} />}
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
+
                   <TextInput
                     label="City"
                     value={city}
                     onChangeText={setCity}
                     mode="outlined"
-                    style={styles.input}
                     left={<TextInput.Icon icon="city" color={theme.colors.primary.main} />}
-                    outlineColor={theme.colors.primary.pastel}
+                    outlineColor={outlineColor}
                     activeOutlineColor={theme.colors.primary.main}
-                    theme={{
-                      colors: {
-                        background: '#FFFFFF',
-                        text: theme.colors.text.primary,
-                      },
-                    }}
+                    textColor={theme.colors.text.primary}
+                    style={inputStyle}
+                    theme={inputTheme}
                   />
                 </>
               )}
 
-              <View style={styles.buttonContainer}>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                 {step > 1 && (
-                  <GradientButton
-                    title="Back"
+                  <Button
+                    mode="outlined"
                     onPress={() => setStep(step - 1)}
-                    colors={theme.colors.gradients.sunset}
-                    style={styles.backButton}
-                  />
+                    textColor={theme.colors.text.primary}
+                    style={{ flex: 1, borderRadius: 12, borderColor: isDark ? 'rgba(255,255,255,0.12)' : theme.colors.primary.pastel }}
+                    contentStyle={{ paddingVertical: 4 }}
+                  >
+                    Back
+                  </Button>
                 )}
-                <GradientButton
-                  title={step === 2 ? 'Register' : 'Next'}
+                <Button
+                  mode="contained"
                   onPress={handleNext}
                   loading={loading}
-                  colors={theme.colors.gradients.primary}
-                  style={styles.nextButton}
-                />
+                  disabled={loading}
+                  buttonColor={theme.colors.primary.main}
+                  textColor="#FFFFFF"
+                  style={{ flex: 2, borderRadius: 12 }}
+                  contentStyle={{ paddingVertical: 6 }}
+                >
+                  {step === 2 ? 'Register' : 'Next'}
+                </Button>
               </View>
-            </GlassCard>
+            </Card.Content>
+          </Card>
 
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account?</Text>
-              <Text style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
-                Login
-              </Text>
-            </View>
+          {/* Login link */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+              Already have an account?
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.primary.main, fontWeight: '700' }}
+              onPress={() => navigation.navigate('Login')}
+            >
+              Login
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: theme.colors.primary.light,
-    opacity: 0.3,
-    top: -100,
-    right: -100,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: theme.colors.secondary.light,
-    opacity: 0.3,
-    bottom: -50,
-    left: -50,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-    paddingBottom: 40,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  emoji: {
-    fontSize: 64,
-    marginBottom: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.typography.fontSize.xxxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  subtitle: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
-  stepDot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background.card,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.pastel,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepDotActive: {
-    backgroundColor: theme.colors.primary.main,
-    borderColor: theme.colors.primary.main,
-  },
-  stepDotCompleted: {
-    backgroundColor: theme.colors.secondary.main,
-    borderColor: theme.colors.secondary.main,
-  },
-  stepText: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.disabled,
-  },
-  stepTextActive: {
-    color: '#FFFFFF',
-  },
-  formCard: {
-    marginBottom: theme.spacing.lg,
-  },
-  stepTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.lg,
-    textAlign: 'center',
-  },
-  input: {
-    marginBottom: theme.spacing.md,
-    backgroundColor: '#FFFFFF',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.md,
-  },
-  backButton: {
-    flex: 1,
-  },
-  nextButton: {
-    flex: 2,
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  loginText: {
-    color: theme.colors.text.secondary,
-    fontSize: theme.typography.fontSize.md,
-  },
-  loginLink: {
-    color: theme.colors.primary.dark,
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-});
