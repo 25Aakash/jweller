@@ -1,11 +1,20 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SkeletonLoader from './SkeletonLoader';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export default function SkeletonCard() {
+  const { theme, isDark } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, {
+      backgroundColor: theme.colors.background.card,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+      ...theme.shadows.md,
+      ...(isDark && { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }),
+    }]}>
       <SkeletonLoader height={24} width="60%" style={styles.title} />
       <SkeletonLoader height={48} width="80%" style={styles.value} />
       <SkeletonLoader height={16} width="50%" style={styles.subtitle} />
@@ -23,25 +32,19 @@ export default function SkeletonCard() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    ...theme.shadows.md,
-  },
+  card: {},
   title: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   value: {
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   subtitle: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   details: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface GradientButtonProps {
   title: string;
@@ -20,19 +20,22 @@ export default function GradientButton({
   loading = false,
   disabled = false,
   icon,
-  colors = theme.colors.gradients.primary,
+  colors,
   style,
   textStyle,
 }: GradientButtonProps) {
+  const { theme } = useTheme();
+  const gradientColors = colors || theme.colors.gradients.primary;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
-      style={[styles.container, style]}
+      style={[{ borderRadius: theme.borderRadius.lg, overflow: 'hidden', ...theme.shadows.md }, style]}
     >
       <LinearGradient
-        colors={colors}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradient}
@@ -42,7 +45,7 @@ export default function GradientButton({
         ) : (
           <>
             {icon}
-            <Text style={[styles.text, textStyle]}>{title}</Text>
+            <Text style={[styles.text, { fontSize: theme.typography.fontSize.md, fontWeight: theme.typography.fontWeight.bold }, textStyle]}>{title}</Text>
           </>
         )}
       </LinearGradient>
@@ -51,11 +54,6 @@ export default function GradientButton({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-  },
   gradient: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -66,8 +64,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#FFFFFF',
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
   },
 });

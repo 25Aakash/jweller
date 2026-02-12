@@ -4,9 +4,11 @@ import { TextInput } from 'react-native-paper';
 import { walletAPI } from '../../api/endpoints';
 import GlassCard from '../../components/GlassCard';
 import GradientButton from '../../components/GradientButton';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function AddMoneyScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -128,7 +130,7 @@ export default function AddMoneyScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

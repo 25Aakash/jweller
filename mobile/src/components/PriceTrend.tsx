@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface PriceTrendProps {
   currentPrice: number;
@@ -13,6 +13,7 @@ export default function PriceTrend({
   previousPrice,
   size = 'small',
 }: PriceTrendProps) {
+  const { theme } = useTheme();
   const change = currentPrice - previousPrice;
   const changePercent = previousPrice > 0 ? ((change / previousPrice) * 100).toFixed(2) : '0.00';
   const isPositive = change >= 0;
@@ -32,8 +33,7 @@ export default function PriceTrend({
       </Text>
       <Text
         style={[
-          styles.text,
-          { fontSize: textSize, color: isPositive ? theme.colors.success : theme.colors.error },
+          { fontSize: textSize, color: isPositive ? theme.colors.success : theme.colors.error, fontWeight: theme.typography.fontWeight.semibold },
         ]}
       >
         {isPositive ? '+' : ''}{changePercent}%
@@ -50,8 +50,5 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontWeight: 'bold',
-  },
-  text: {
-    fontWeight: theme.typography.fontWeight.semibold,
   },
 });

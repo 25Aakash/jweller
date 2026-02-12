@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Text, Alert } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, Button, TextInput, ActivityIndicator } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { goldAPI } from '../../api/endpoints';
 import { GoldPrice } from '../../types';
-import GlassCard from '../../components/GlassCard';
-import GradientButton from '../../components/GradientButton';
-import AnimatedNumber from '../../components/AnimatedNumber';
-import PriceTrend from '../../components/PriceTrend';
-import SkeletonCard from '../../components/SkeletonCard';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function GoldScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
-  const [previousPrice, setPreviousPrice] = useState<number>(0);
   const [amount, setAmount] = useState('');
   const [grams, setGrams] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,9 +21,6 @@ export default function GoldScreen({ navigation }: any) {
   const loadGoldPrice = async () => {
     try {
       const data = await goldAPI.getCurrentPrice();
-      if (goldPrice) {
-        setPreviousPrice(goldPrice.final_price);
-      }
       setGoldPrice(data);
     } catch (error) {
       console.error('Error loading gold price:', error);
@@ -63,168 +55,152 @@ export default function GoldScreen({ navigation }: any) {
     }
   };
 
-  const handleBookGold = () => {
-    if (!amount || !grams) {
-      Alert.alert('Error', 'Please enter amount or grams');
-      return;
-    }
-    navigation.navigate('GoldBooking');
-  };
-
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-        <View style={styles.skeletonContainer}>
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.primary.light }]} />
-      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.secondary.light }]} />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background.primary }]}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary.main} />
+      }
+    >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: isDark ? theme.colors.background.secondary : theme.colors.primary.dark }]}>
+        <Text variant="headlineMedium" style={[styles.headerTitle, { color: isDark ? theme.colors.text.primary : '#fff' }]}>
+          🏆 Live Gold Price
+        </Text>
+        <Text variant="bodyMedium" style={{ color: isDark ? theme.colors.text.secondary : 'rgba(255,255,255,0.9)' }}>
+          24K Gold per gram
+        </Text>
+      </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary.main}
+      {/* Price Card */}
+      <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content style={styles.priceContent}>
+          <MaterialCommunityIcons name="gold" size={48} color="#FFD700" />
+          <Text variant="displaySmall" style={[styles.priceAmount, { color: theme.colors.text.primary }]}>
+            ₹{goldPrice?.final_price?.toFixed(2) || '0.00'}
+          </Text>
+          <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+            per gram
+          </Text>
+
+          <View style={styles.priceDetails}>
+            <View style={styles.priceDetailRow}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>Base MCX Price</Text>
+              <Text variant="titleSmall" style={{ color: theme.colors.text.primary }}>
+                ₹{goldPrice?.base_mcx_price?.toFixed(2) || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.priceDetailRow}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>Margin</Text>
+              <Text variant="titleSmall" style={{ color: theme.colors.text.primary }}>
+                {goldPrice?.margin_percent || '0'}%
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Calculator Card */}
+      <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
+            🧮 Gold Calculator
+          </Text>
+
+          <TextInput
+            label="Amount (₹)"
+            value={amount}
+            onChangeText={calculateGrams}
+            keyboardType="numeric"
+            mode="outlined"
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
+            left={<TextInput.Icon icon="currency-inr" color={theme.colors.primary.main} />}
+            outlineColor={isDark ? 'rgba(255,255,255,0.12)' : theme.colors.primary.pastel}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            theme={{
+              colors: {
+                background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
+                text: theme.colors.text.primary,
+                placeholder: theme.colors.text.secondary,
+                onSurfaceVariant: theme.colors.text.secondary,
+              },
+            }}
           />
-        }
-      >
-        <View style={styles.content}>
-          {/* Current Price Card */}
-          <GlassCard
-            gradient
-            gradientColors={theme.colors.gradients.primary}
-            intensity={90}
-            style={styles.priceCard}
-          >
-            <View style={styles.priceHeader}>
-              <View>
-                <Text style={styles.priceLabel}>🏆 Live Gold Price</Text>
-                <Text style={styles.priceSubtext}>per gram (24K)</Text>
-              </View>
-              {previousPrice > 0 && goldPrice && (
-                <PriceTrend
-                  currentPrice={goldPrice.final_price}
-                  previousPrice={previousPrice}
-                  size="large"
-                />
-              )}
-            </View>
-            
-            <AnimatedNumber
-              value={goldPrice?.final_price || 0}
-              prefix="₹"
-              decimals={2}
-              style={styles.priceAmount}
-            />
 
-            <View style={styles.priceDetails}>
-              <View style={styles.priceDetailRow}>
-                <Text style={styles.priceDetailLabel}>Base MCX:</Text>
-                <Text style={styles.priceDetailValue}>
-                  ₹{goldPrice?.base_mcx_price?.toFixed(2) || 'N/A'}
-                </Text>
-              </View>
-              <View style={styles.priceDetailRow}>
-                <Text style={styles.priceDetailLabel}>Margin:</Text>
-                <Text style={styles.priceDetailValue}>
-                  {goldPrice?.margin_percent || '0'}%
-                </Text>
-              </View>
-            </View>
-          </GlassCard>
+          <Text variant="bodyMedium" style={{ color: theme.colors.text.disabled, textAlign: 'center', marginVertical: 8 }}>
+            OR
+          </Text>
 
-          {/* Calculator Card */}
-          <GlassCard
-            gradient
-            gradientColors={theme.colors.gradients.secondary}
-            intensity={90}
-            style={styles.calculatorCard}
-          >
-            <Text style={styles.calculatorTitle}>🧮 Gold Calculator</Text>
+          <TextInput
+            label="Grams"
+            value={grams}
+            onChangeText={calculateAmount}
+            keyboardType="numeric"
+            mode="outlined"
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
+            left={<TextInput.Icon icon="weight-gram" color={theme.colors.primary.main} />}
+            outlineColor={isDark ? 'rgba(255,255,255,0.12)' : theme.colors.primary.pastel}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            theme={{
+              colors: {
+                background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
+                text: theme.colors.text.primary,
+                placeholder: theme.colors.text.secondary,
+                onSurfaceVariant: theme.colors.text.secondary,
+              },
+            }}
+          />
 
-            <TextInput
-              label="Amount (₹)"
-              value={amount}
-              onChangeText={calculateGrams}
-              keyboardType="numeric"
-              mode="outlined"
-              style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
-              left={<TextInput.Icon icon="currency-inr" color={theme.colors.primary.main} />}
-              outlineColor={theme.colors.primary.pastel}
-              activeOutlineColor={theme.colors.primary.main}
-              textColor={theme.colors.text.primary}
-              theme={{
-                colors: {
-                  background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
-                  text: theme.colors.text.primary,
-                  placeholder: theme.colors.text.secondary,
-                  onSurfaceVariant: theme.colors.text.secondary,
-                },
-              }}
-            />
-
-            <Text style={[styles.orText, { color: theme.colors.text.disabled }]}>OR</Text>
-
-            <TextInput
-              label="Grams"
-              value={grams}
-              onChangeText={calculateAmount}
-              keyboardType="numeric"
-              mode="outlined"
-              style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
-              left={<TextInput.Icon icon="weight-gram" color={theme.colors.primary.main} />}
-              outlineColor={theme.colors.primary.pastel}
-              activeOutlineColor={theme.colors.primary.main}
-              textColor={theme.colors.text.primary}
-              theme={{
-                colors: {
-                  background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
-                  text: theme.colors.text.primary,
-                  placeholder: theme.colors.text.secondary,
-                  onSurfaceVariant: theme.colors.text.secondary,
-                },
-              }}
-            />
-
-            {amount && grams && (
-              <View style={[styles.resultBox, { backgroundColor: isDark ? theme.colors.background.tertiary : theme.colors.secondary.light }]}>
-                <Text style={[styles.resultText, { color: isDark ? theme.colors.secondary.main : theme.colors.secondary.dark }]}>
+          {amount && grams && (
+            <Card style={[styles.resultCard, { backgroundColor: isDark ? theme.colors.background.tertiary : theme.colors.secondary.light }]}>
+              <Card.Content style={styles.resultContent}>
+                <Text variant="titleMedium" style={{ color: isDark ? theme.colors.secondary.main : theme.colors.secondary.dark, fontWeight: 'bold' }}>
                   ₹{amount} = {grams} grams
                 </Text>
-                <Text style={[styles.resultSubtext, { color: isDark ? theme.colors.text.secondary : theme.colors.secondary.dark }]}>
+                <Text variant="bodySmall" style={{ color: isDark ? theme.colors.text.secondary : theme.colors.secondary.dark }}>
                   @ ₹{goldPrice?.final_price?.toFixed(2) || '0.00'}/gram
                 </Text>
-              </View>
-            )}
+              </Card.Content>
+            </Card>
+          )}
 
-            <GradientButton
-              title="Book Gold"
-              icon="💰"
-              onPress={handleBookGold}
-              colors={theme.colors.gradients.primary}
-              style={styles.bookButton}
-            />
-          </GlassCard>
+          <Button
+            mode="contained"
+            icon="gold"
+            style={styles.bookButton}
+            buttonColor={theme.colors.primary.main}
+            textColor="#fff"
+            onPress={() => navigation.navigate('GoldBooking')}
+          >
+            Book Gold
+          </Button>
+        </Card.Content>
+      </Card>
 
-          <GradientButton
-            title="View My Bookings"
-            icon="📋"
-            onPress={() => navigation.navigate('Bookings')}
-            colors={theme.colors.gradients.sunset}
-            style={styles.viewBookingsButton}
-          />
-        </View>
-      </ScrollView>
-    </View>
+      {/* View Bookings */}
+      <View style={styles.bookingsSection}>
+        <Button
+          mode="outlined"
+          icon="book-open-variant"
+          style={[styles.bookingsButton, { borderColor: theme.colors.primary.main }]}
+          textColor={theme.colors.primary.main}
+          onPress={() => navigation.navigate('Bookings')}
+        >
+          View My Bookings
+        </Button>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -232,102 +208,67 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    opacity: 0.2,
-    top: -100,
-    right: -100,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.2,
-    bottom: -50,
-    left: -50,
+  header: {
+    padding: 20,
   },
-  skeletonContainer: {
-    padding: 24,
-    gap: 24,
+  headerTitle: {
+    fontWeight: 'bold',
   },
-  content: {
-    padding: 24,
+  card: {
+    margin: 10,
+    borderRadius: 12,
   },
-  priceCard: {
-    marginBottom: 24,
+  darkCardBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  priceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  priceLabel: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  priceSubtext: {
-    fontSize: 14,
+  priceContent: {
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   priceAmount: {
-    fontSize: 42,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
+    fontWeight: 'bold',
+    marginTop: 12,
   },
   priceDetails: {
+    width: '100%',
+    marginTop: 20,
     gap: 8,
   },
   priceDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingVertical: 4,
   },
-  priceDetailLabel: {
-    fontSize: 14,
-  },
-  priceDetailValue: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  calculatorCard: {
-    marginBottom: 24,
-  },
-  calculatorTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
+  sectionTitle: {
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   input: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  orText: {
-    textAlign: 'center',
-    marginVertical: 8,
-    fontSize: 14,
-  },
-  resultBox: {
-    padding: 16,
-    borderRadius: 12,
+  resultCard: {
+    marginTop: 12,
     marginBottom: 16,
+    borderRadius: 10,
+  },
+  resultContent: {
     alignItems: 'center',
-  },
-  resultText: {
-    fontWeight: '700',
-    marginBottom: 4,
-    fontSize: 16,
-  },
-  resultSubtext: {
-    fontSize: 14,
+    paddingVertical: 8,
   },
   bookButton: {
     marginTop: 8,
+    borderRadius: 10,
   },
-  viewBookingsButton: {
-    marginBottom: 32,
+  bookingsSection: {
+    padding: 20,
+  },
+  bookingsButton: {
+    borderRadius: 10,
   },
 });

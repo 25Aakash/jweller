@@ -5,9 +5,11 @@ import { Transaction } from '../../types';
 import GlassCard from '../../components/GlassCard';
 import EmptyState from '../../components/EmptyState';
 import SkeletonCard from '../../components/SkeletonCard';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function TransactionsScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -166,7 +168,7 @@ export default function TransactionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

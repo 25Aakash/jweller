@@ -6,13 +6,15 @@ import * as Updates from 'expo-updates';
 import { useAuth } from '../context/AuthContext';
 import GradientButton from '../components/GradientButton';
 import GlassCard from '../components/GlassCard';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   navigation: any;
 }
 
 export default function LoginScreen({ navigation }: Props) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -182,7 +184,7 @@ export default function LoginScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, Button, ActivityIndicator } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { walletAPI } from '../../api/endpoints';
-import GlassCard from '../../components/GlassCard';
-import AnimatedNumber from '../../components/AnimatedNumber';
-import SkeletonCard from '../../components/SkeletonCard';
-import EmptyState from '../../components/EmptyState';
-import QuickActionButton from '../../components/QuickActionButton';
 import { useTheme } from '../../context/ThemeContext';
 
 interface Transaction {
@@ -50,151 +46,151 @@ export default function WalletScreen({ navigation }: any) {
     loadData();
   };
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string): string => {
     switch (type.toLowerCase()) {
-      case 'credit':
-      case 'deposit':
-        return '💰';
-      case 'debit':
-      case 'withdrawal':
-        return '💸';
-      case 'gold_purchase':
-        return '🏆';
-      default:
-        return '💳';
+      case 'credit': case 'deposit': return 'arrow-down-circle';
+      case 'debit': case 'withdrawal': return 'arrow-up-circle';
+      case 'gold_purchase': return 'gold';
+      default: return 'credit-card';
     }
   };
 
   const getTransactionColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'credit':
-      case 'deposit':
-        return theme.colors.success;
-      case 'debit':
-      case 'withdrawal':
-        return theme.colors.error;
-      default:
-        return theme.colors.text.secondary;
+      case 'credit': case 'deposit': return theme.colors.success;
+      case 'debit': case 'withdrawal': return theme.colors.error;
+      default: return theme.colors.text.secondary;
     }
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-        <View style={styles.skeletonContainer}>
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.secondary.light }]} />
-      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.primary.light }]} />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background.primary }]}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary.main} />
+      }
+    >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: isDark ? theme.colors.background.secondary : theme.colors.primary.dark }]}>
+        <Text variant="headlineMedium" style={[styles.headerTitle, { color: isDark ? theme.colors.text.primary : '#fff' }]}>
+          💰 My Wallet
+        </Text>
+        <Text variant="bodyMedium" style={{ color: isDark ? theme.colors.text.secondary : 'rgba(255,255,255,0.9)' }}>
+          Manage your funds
+        </Text>
+      </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary.main}
-          />
-        }
-      >
-        <View style={styles.content}>
-          {/* Balance Card */}
-          <GlassCard
-            gradient
-            gradientColors={theme.colors.gradients.secondary}
-            intensity={90}
-            style={styles.balanceCard}
-          >
-            <View style={styles.balanceContent}>
-              <Text style={styles.balanceLabel}>💰 Total Balance</Text>
-              <AnimatedNumber
-                value={balance}
-                prefix="₹"
-                decimals={2}
-                style={styles.balanceAmount}
-              />
-              <View style={styles.quickActions}>
-                <QuickActionButton
-                  title="Add Money"
-                  icon="+"
-                  onPress={() => navigation.navigate('AddMoney')}
-                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
-                  style={styles.actionButton}
-                />
-                <QuickActionButton
-                  title="Withdraw"
-                  icon="−"
-                  onPress={() => navigation.navigate('Withdraw')}
-                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
-                  style={styles.actionButton}
-                />
-              </View>
-            </View>
-          </GlassCard>
-
-          {/* Transactions */}
-          <View style={styles.transactionsHeader}>
-            <Text style={[styles.transactionsTitle, { color: theme.colors.text.primary }]}>Recent Transactions</Text>
-            <TouchableOpacity>
-              <Text style={[styles.viewAll, { color: theme.colors.primary.main }]}>View All →</Text>
-            </TouchableOpacity>
+      {/* Balance Card */}
+      <Card style={[styles.balanceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content style={styles.balanceContent}>
+          <MaterialCommunityIcons name="wallet" size={40} color={theme.colors.primary.main} />
+          <Text variant="bodyLarge" style={{ color: theme.colors.text.secondary, marginTop: 8 }}>
+            Total Balance
+          </Text>
+          <Text variant="displaySmall" style={[styles.balanceAmount, { color: theme.colors.text.primary }]}>
+            ₹{balance.toFixed(2)}
+          </Text>
+          <View style={styles.actionRow}>
+            <Button
+              mode="contained"
+              icon="plus"
+              style={styles.actionButton}
+              buttonColor={theme.colors.primary.main}
+              textColor="#fff"
+              onPress={() => navigation.navigate('AddMoney')}
+            >
+              Add Money
+            </Button>
+            <Button
+              mode="outlined"
+              icon="minus"
+              style={[styles.actionButton, { borderColor: theme.colors.primary.main }]}
+              textColor={theme.colors.primary.main}
+              onPress={() => navigation.navigate('Withdraw')}
+            >
+              Withdraw
+            </Button>
           </View>
+        </Card.Content>
+      </Card>
 
-          {transactions.length === 0 ? (
-            <EmptyState
-              emoji="📭"
-              title="No Transactions Yet"
-              message="Your transaction history will appear here once you start using your wallet."
-              actionText="Add Money"
-              onAction={() => navigation.navigate('AddMoney')}
-            />
-          ) : (
-            transactions?.slice(0, 10).map((transaction) => (
-              <GlassCard key={transaction.id} intensity={90} style={styles.transactionCard}>
-                <View style={styles.transactionContent}>
-                  <View style={styles.transactionLeft}>
-                    <Text style={styles.transactionIcon}>
-                      {getTransactionIcon(transaction.type)}
+      {/* Transactions */}
+      <View style={styles.transactionsSection}>
+        <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
+          Recent Transactions
+        </Text>
+
+        {transactions.length === 0 ? (
+          <Card style={[styles.emptyCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.emptyContent}>
+              <MaterialCommunityIcons name="inbox-outline" size={48} color={theme.colors.text.disabled} />
+              <Text variant="titleMedium" style={{ color: theme.colors.text.secondary, marginTop: 12 }}>
+                No Transactions Yet
+              </Text>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.disabled, textAlign: 'center', marginTop: 4 }}>
+                Your transaction history will appear here
+              </Text>
+              <Button
+                mode="contained"
+                icon="plus"
+                style={{ marginTop: 16, borderRadius: 10 }}
+                buttonColor={theme.colors.primary.main}
+                textColor="#fff"
+                onPress={() => navigation.navigate('AddMoney')}
+              >
+                Add Money
+              </Button>
+            </Card.Content>
+          </Card>
+        ) : (
+          transactions.slice(0, 10).map((transaction) => (
+            <Card
+              key={transaction.id}
+              style={[styles.transactionCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}
+            >
+              <Card.Content style={styles.transactionContent}>
+                <View style={styles.transactionLeft}>
+                  <MaterialCommunityIcons
+                    name={getTransactionIcon(transaction.type) as any}
+                    size={28}
+                    color={getTransactionColor(transaction.type)}
+                  />
+                  <View style={{ marginLeft: 12 }}>
+                    <Text variant="titleSmall" style={{ color: theme.colors.text.primary, textTransform: 'capitalize' }}>
+                      {transaction.type.replace('_', ' ')}
                     </Text>
-                    <View>
-                      <Text style={[styles.transactionType, { color: theme.colors.text.primary }]}>
-                        {transaction.type.replace('_', ' ')}
-                      </Text>
-                      <Text style={[styles.transactionDate, { color: theme.colors.text.secondary }]}>
-                        {new Date(transaction.created_at).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.transactionRight}>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        { color: getTransactionColor(transaction.type) },
-                      ]}
-                    >
-                      {transaction.type.toLowerCase().includes('credit') ||
-                      transaction.type.toLowerCase().includes('deposit')
-                        ? '+'
-                        : '-'}
-                      ₹{transaction.amount.toFixed(2)}
+                    <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                      {new Date(transaction.created_at).toLocaleDateString()}
                     </Text>
-                    <Text style={[styles.transactionStatus, { color: theme.colors.text.disabled }]}>{transaction.status}</Text>
                   </View>
                 </View>
-              </GlassCard>
-            ))
-          )}
-        </View>
-      </ScrollView>
-    </View>
+                <View style={styles.transactionRight}>
+                  <Text
+                    variant="titleSmall"
+                    style={{ color: getTransactionColor(transaction.type), fontWeight: 'bold' }}
+                  >
+                    {transaction.type.toLowerCase().includes('credit') || transaction.type.toLowerCase().includes('deposit') ? '+' : '-'}
+                    ₹{transaction.amount.toFixed(2)}
+                  </Text>
+                  <Text variant="labelSmall" style={{ color: theme.colors.text.disabled, textTransform: 'capitalize' }}>
+                    {transaction.status}
+                  </Text>
+                </View>
+              </Card.Content>
+            </Card>
+          ))
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -202,74 +198,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    opacity: 0.2,
-    top: 50,
-    right: -100,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.2,
-    bottom: 100,
-    left: -80,
-  },
-  scrollView: {
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  skeletonContainer: {
-    padding: 24,
-    gap: 24,
+  header: {
+    padding: 20,
   },
-  content: {
-    padding: 24,
+  headerTitle: {
+    fontWeight: 'bold',
   },
   balanceCard: {
-    marginBottom: 32,
+    margin: 10,
+    borderRadius: 12,
+  },
+  darkCardBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   balanceContent: {
     alignItems: 'center',
-    paddingVertical: 24,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
+    paddingVertical: 20,
   },
   balanceAmount: {
-    fontSize: 48,
-    fontWeight: '700',
-    marginBottom: 24,
+    fontWeight: 'bold',
+    marginVertical: 8,
   },
-  quickActions: {
+  actionRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
+    marginTop: 16,
   },
   actionButton: {
     flex: 1,
+    borderRadius: 10,
   },
-  transactionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  transactionsSection: {
+    padding: 10,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  emptyCard: {
+    borderRadius: 12,
+  },
+  emptyContent: {
     alignItems: 'center',
-    marginBottom: 16,
-  },
-  transactionsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  viewAll: {
-    fontSize: 14,
-    fontWeight: '600',
+    paddingVertical: 30,
   },
   transactionCard: {
-    marginBottom: 16,
+    marginBottom: 8,
+    borderRadius: 12,
   },
   transactionContent: {
     flexDirection: 'row',
@@ -279,31 +261,9 @@ const styles = StyleSheet.create({
   transactionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
     flex: 1,
-  },
-  transactionIcon: {
-    fontSize: 32,
-  },
-  transactionType: {
-    fontSize: 16,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  transactionDate: {
-    fontSize: 14,
-    marginTop: 2,
   },
   transactionRight: {
     alignItems: 'flex-end',
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  transactionStatus: {
-    fontSize: 12,
-    marginTop: 2,
-    textTransform: 'capitalize',
   },
 });

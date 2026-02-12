@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface GradientCardProps {
   children: React.ReactNode;
@@ -14,6 +14,7 @@ export default function GradientCard({
   colors = ['#FFFFFF', '#F8F8F8'],
   style,
 }: GradientCardProps) {
+  const { theme } = useTheme();
   return (
     <View style={[styles.container, style]}>
       <LinearGradient
@@ -30,11 +31,10 @@ export default function GradientCard({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 16,
     overflow: 'hidden',
-    ...theme.shadows.md,
   },
   gradient: {
-    padding: theme.spacing.md,
+    padding: 16,
   },
 });

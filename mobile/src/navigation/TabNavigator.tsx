@@ -18,11 +18,9 @@ export default function TabNavigator() {
         tabBarActiveTintColor: theme.colors.primary.main,
         tabBarInactiveTintColor: theme.colors.text.disabled,
         tabBarStyle: {
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
           backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
+          borderTopWidth: 0.5,
         },
         headerStyle: {
           backgroundColor: isDark ? '#1E1E1E' : theme.colors.primary.dark,

@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Text } from 'react-native';
-import { ActivityIndicator } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, Button, ActivityIndicator, List } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { walletAPI, goldAPI } from '../api/endpoints';
 import { WalletBalance, GoldPrice } from '../types';
-import GlassCard from '../components/GlassCard';
-import AnimatedNumber from '../components/AnimatedNumber';
-import SkeletonCard from '../components/SkeletonCard';
-import PressableCard from '../components/PressableCard';
-import QuickActionButton from '../components/QuickActionButton';
-import StatsCard from '../components/StatsCard';
-import PriceTrend from '../components/PriceTrend';
 import { getGreeting } from '../utils/greetings';
 
 export default function HomeScreen({ navigation }: any) {
@@ -20,7 +13,6 @@ export default function HomeScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
   const [wallet, setWallet] = useState<WalletBalance | null>(null);
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
-  const [previousPrice, setPreviousPrice] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -37,11 +29,6 @@ export default function HomeScreen({ navigation }: any) {
         walletAPI.getBalance(),
         goldAPI.getCurrentPrice(),
       ]);
-      
-      if (goldPrice) {
-        setPreviousPrice(goldPrice.final_price);
-      }
-      
       setWallet(walletData);
       setGoldPrice(goldData);
       setLastUpdated(new Date());
@@ -58,14 +45,9 @@ export default function HomeScreen({ navigation }: any) {
     loadData();
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   const formatLastUpdated = () => {
     const now = new Date();
     const diff = Math.floor((now.getTime() - lastUpdated.getTime()) / 1000);
-    
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -75,179 +57,165 @@ export default function HomeScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
-        <View style={styles.skeletonContainer}>
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      {/* Soft decorative circles */}
-      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.primary.light }]} />
-      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.secondary.light }]} />
-      <View style={[styles.decorativeCircle3, { backgroundColor: theme.colors.accent.pink }]} />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background.primary }]}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary.main} />
+      }
+    >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: isDark ? theme.colors.background.secondary : theme.colors.primary.dark }]}>
+        <Text variant="bodyLarge" style={{ color: isDark ? theme.colors.text.secondary : 'rgba(255,255,255,0.9)' }}>
+          {greeting.emoji} {greeting.text}!
+        </Text>
+        <Text variant="headlineMedium" style={[styles.headerName, { color: isDark ? theme.colors.text.primary : '#fff' }]}>
+          {user?.name || 'Guest'}
+        </Text>
+        <Text variant="bodySmall" style={{ color: isDark ? theme.colors.text.disabled : 'rgba(255,255,255,0.7)' }}>
+          Updated {formatLastUpdated()}
+        </Text>
+      </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary.main}
+      {/* Stats Grid */}
+      <View style={styles.statsGrid}>
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="wallet" size={32} color={theme.colors.primary.main} />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              ₹{wallet?.balance?.toFixed(0) || '0'}
+            </Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+              Wallet Balance
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="gold" size={32} color="#FFD700" />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              ₹{goldPrice?.final_price?.toFixed(0) || '0'}
+            </Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+              Gold Price/g
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="chart-line" size={32} color={theme.colors.success} />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              {goldPrice?.margin_percent || '0'}%
+            </Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+              Margin
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="currency-inr" size={32} color={theme.colors.warning} />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              ₹{goldPrice?.base_mcx_price?.toFixed(0) || '0'}
+            </Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+              Base MCX
+            </Text>
+          </Card.Content>
+        </Card>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
+          Quick Actions
+        </Text>
+
+        <Button
+          mode="contained"
+          icon="wallet-plus"
+          style={styles.actionButton}
+          buttonColor={theme.colors.primary.main}
+          textColor="#fff"
+          onPress={() => navigation.navigate('Wallet')}
+        >
+          Add Money to Wallet
+        </Button>
+
+        <Button
+          mode="contained"
+          icon="gold"
+          style={styles.actionButton}
+          buttonColor="#FFD700"
+          textColor="#000"
+          onPress={() => navigation.navigate('GoldBooking')}
+        >
+          Buy Gold Now
+        </Button>
+
+        <Button
+          mode="outlined"
+          icon="book-open-variant"
+          style={[styles.actionButton, { borderColor: theme.colors.primary.main }]}
+          textColor={theme.colors.primary.main}
+          onPress={() => navigation.navigate('Bookings')}
+        >
+          View My Bookings
+        </Button>
+      </View>
+
+      {/* Account Info */}
+      <Card style={[styles.infoCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
+            Account Information
+          </Text>
+          <List.Item
+            title="Phone"
+            description={user?.phone_number || 'N/A'}
+            titleStyle={{ color: theme.colors.text.primary }}
+            descriptionStyle={{ color: theme.colors.text.secondary }}
+            left={(props) => <List.Icon {...props} icon="phone" color={theme.colors.primary.main} />}
           />
-        }
-      >
-        <View style={styles.content}>
-          {/* Personalized Header */}
-          <View style={styles.header}>
-            <Text style={[styles.greeting, { color: theme.colors.text.secondary }]}>{greeting.emoji} {greeting.text}!</Text>
-            <Text style={[styles.userName, { color: theme.colors.text.primary }]}>{user?.name || 'Guest'}</Text>
-            <Text style={[styles.lastUpdated, { color: theme.colors.text.disabled }]}>Updated {formatLastUpdated()}</Text>
-          </View>
-
-          {/* Quick Stats - Horizontal Scroll */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.statsContainer}
-          >
-            <StatsCard
-              icon="💰"
-              label="Wallet Balance"
-              value={`₹${wallet?.balance?.toFixed(0) || '0'}`}
-              colors={theme.colors.gradients.secondary}
-            />
-            <StatsCard
-              icon="🏆"
-              label="Gold Price"
-              value={`₹${goldPrice?.final_price?.toFixed(0) || '0'}`}
-              colors={theme.colors.gradients.primary}
-            />
-            <StatsCard
-              icon="📊"
-              label="Total Invested"
-              value="₹0"
-              colors={theme.colors.gradients.sunset}
-            />
-          </ScrollView>
-
-          {/* Wallet Balance Card */}
-          <PressableCard onPress={() => navigation.navigate('Wallet')}>
-            <GlassCard
-              gradient
-              gradientColors={theme.colors.gradients.secondary}
-              intensity={90}
-              style={styles.walletCard}
-            >
-              <View style={styles.walletContent}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.walletLabel}>💰 Wallet Balance</Text>
-                  <QuickActionButton
-                    title="Add Money"
-                    icon="+"
-                    onPress={() => navigation.navigate('Wallet')}
-                    colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
-                    style={styles.quickAction}
-                  />
-                </View>
-                <AnimatedNumber
-                  value={wallet?.balance || 0}
-                  prefix="₹"
-                  decimals={2}
-                  style={styles.walletAmount}
-                />
-                <Text style={styles.walletSubtext}>Available for gold booking</Text>
-              </View>
-            </GlassCard>
-          </PressableCard>
-
-          {/* Gold Price Card */}
-          <PressableCard onPress={() => navigation.navigate('GoldBooking')}>
-            <GlassCard
-              gradient
-              gradientColors={theme.colors.gradients.primary}
-              intensity={90}
-              style={styles.goldCard}
-            >
-              <View style={styles.goldContent}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.goldHeader}>
-                    <Text style={styles.goldEmoji}>🏆</Text>
-                    <Text style={styles.goldLabel}>Live Gold Price</Text>
-                  </View>
-                  {previousPrice > 0 && goldPrice && (
-                    <PriceTrend
-                      currentPrice={goldPrice.final_price}
-                      previousPrice={previousPrice}
-                      size="small"
-                    />
-                  )}
-                </View>
-                
-                <AnimatedNumber
-                  value={goldPrice?.final_price || 0}
-                  prefix="₹"
-                  decimals={2}
-                  style={styles.goldPrice}
-                />
-                <Text style={styles.goldUnit}>per gram</Text>
-                
-                <View style={styles.goldDetails}>
-                  <View style={styles.goldDetailRow}>
-                    <Text style={styles.goldDetailLabel}>Base Price:</Text>
-                    <Text style={styles.goldDetailValue}>₹{goldPrice?.base_mcx_price?.toFixed(2) || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.goldDetailRow}>
-                    <Text style={styles.goldDetailLabel}>Margin:</Text>
-                    <Text style={styles.goldDetailValue}>{goldPrice?.margin_percent || '0'}%</Text>
-                  </View>
-                </View>
-
-                <QuickActionButton
-                  title="Buy Gold Now"
-                  icon="🛒"
-                  onPress={() => navigation.navigate('GoldBooking')}
-                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
-                  style={styles.buyButton}
-                />
-              </View>
-            </GlassCard>
-          </PressableCard>
-
-          {/* User Info Card */}
-          <GlassCard intensity={90} style={styles.infoCard}>
-            <Text style={[styles.infoTitle, { color: theme.colors.text.primary }]}>Account Information</Text>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>📱 Phone:</Text>
-              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>{user?.phone_number}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>📍 Location:</Text>
-              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>
-                {user?.city && user?.state ? `${user.city}, ${user.state}` : 'Not available'}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>👤 Role:</Text>
-              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>{user?.role}</Text>
-            </View>
-          </GlassCard>
-
-          {/* Logout Button */}
-          <QuickActionButton
-            title="Logout"
-            icon="🚪"
-            onPress={handleLogout}
-            colors={isDark ? ['#5C2626', '#7F1D1D', '#991B1B'] as const : ['#FCA5A5', '#F87171', '#EF4444'] as const}
-            style={styles.logoutButton}
+          <List.Item
+            title="Location"
+            description={user?.city && user?.state ? `${user.city}, ${user.state}` : 'Not available'}
+            titleStyle={{ color: theme.colors.text.primary }}
+            descriptionStyle={{ color: theme.colors.text.secondary }}
+            left={(props) => <List.Icon {...props} icon="map-marker" color={theme.colors.primary.main} />}
           />
-        </View>
-      </ScrollView>
-    </View>
+          <List.Item
+            title="Role"
+            description={user?.role || 'Customer'}
+            titleStyle={{ color: theme.colors.text.primary }}
+            descriptionStyle={{ color: theme.colors.text.secondary }}
+            left={(props) => <List.Icon {...props} icon="account" color={theme.colors.primary.main} />}
+          />
+        </Card.Content>
+      </Card>
+
+      {/* Logout */}
+      <View style={styles.logoutSection}>
+        <Button
+          mode="outlined"
+          icon="logout"
+          style={[styles.actionButton, { borderColor: theme.colors.error }]}
+          textColor={theme.colors.error}
+          onPress={logout}
+        >
+          Logout
+        </Button>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -255,165 +223,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    opacity: 0.2,
-    top: 100,
-    right: -100,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    opacity: 0.2,
-    top: 400,
-    left: -80,
-  },
-  decorativeCircle3: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    opacity: 0.2,
-    bottom: 200,
-    right: -60,
-  },
-  scrollView: {
-    flex: 1,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
-  },
-  skeletonContainer: {
-    gap: 24,
-  },
-  content: {
-    padding: 24,
+    alignItems: 'center',
   },
   header: {
-    marginBottom: 24,
+    padding: 20,
   },
-  greeting: {
-    fontSize: 18,
-    marginBottom: 4,
+  headerName: {
+    fontWeight: 'bold',
+    marginVertical: 4,
   },
-  userName: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  lastUpdated: {
-    fontSize: 14,
-  },
-  statsContainer: {
-    marginBottom: 24,
-  },
-  walletCard: {
-    marginBottom: 24,
-  },
-  walletContent: {
-    paddingVertical: 16,
-  },
-  cardHeader: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 10,
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
   },
-  walletLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+  statCard: {
+    width: '48%',
+    marginBottom: 15,
+    borderRadius: 12,
   },
-  quickAction: {
-    marginLeft: 'auto',
+  darkCardBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  walletAmount: {
-    fontSize: 48,
-    fontWeight: '700',
-    marginBottom: 4,
-    textAlign: 'center',
+  statValue: {
+    fontWeight: 'bold',
+    marginTop: 10,
   },
-  walletSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
+  quickActions: {
+    padding: 20,
   },
-  goldCard: {
-    marginBottom: 24,
+  sectionTitle: {
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
-  goldContent: {
-    paddingVertical: 16,
-  },
-  goldHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  goldEmoji: {
-    fontSize: 24,
-  },
-  goldLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  goldPrice: {
-    fontSize: 42,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  goldUnit: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  goldDetails: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  goldDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  goldDetailLabel: {
-    fontSize: 14,
-  },
-  goldDetailValue: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  buyButton: {
-    marginTop: 8,
+  actionButton: {
+    marginBottom: 10,
+    borderRadius: 10,
   },
   infoCard: {
-    marginBottom: 24,
+    margin: 10,
+    borderRadius: 12,
   },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(129, 140, 248, 0.2)',
-  },
-  infoLabel: {
-    fontSize: 16,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  logoutButton: {
-    marginBottom: 32,
+  logoutSection: {
+    padding: 20,
   },
 });

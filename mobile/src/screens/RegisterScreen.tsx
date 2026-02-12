@@ -4,13 +4,15 @@ import { TextInput } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import GradientButton from '../components/GradientButton';
 import GlassCard from '../components/GlassCard';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   navigation: any;
 }
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [step, setStep] = useState(1);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
@@ -259,7 +261,7 @@ export default function RegisterScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

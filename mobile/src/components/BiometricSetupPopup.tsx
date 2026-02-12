@@ -7,7 +7,7 @@ import {
   setBiometricEnabled,
   storeCredentials,
 } from '../utils/biometric';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface BiometricSetupPopupProps {
   visible: boolean;
@@ -22,6 +22,7 @@ export default function BiometricSetupPopup({
   password,
   onComplete,
 }: BiometricSetupPopupProps) {
+  const { theme, isDark } = useTheme();
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState('');
 
@@ -63,24 +64,24 @@ export default function BiometricSetupPopup({
           <Text style={styles.icon}>
             {biometricType === 'face' ? '👤' : '👆'}
           </Text>
-          <Text style={styles.title}>Enable Quick Login?</Text>
-          <Text style={styles.message}>
+          <Text style={[styles.title, { color: theme.colors.text.primary }]}>Enable Quick Login?</Text>
+          <Text style={[styles.message, { color: theme.colors.text.secondary }]}>
             Use {biometricType === 'face' ? 'Face ID' : 'Fingerprint'} to login quickly and
             securely without entering your password every time.
           </Text>
 
           <View style={styles.benefits}>
-            <View style={styles.benefit}>
+            <View style={[styles.benefit, { backgroundColor: theme.colors.primary.light }]}>
               <Text style={styles.benefitIcon}>⚡</Text>
-              <Text style={styles.benefitText}>Faster login</Text>
+              <Text style={[styles.benefitText, { color: theme.colors.text.primary }]}>Faster login</Text>
             </View>
-            <View style={styles.benefit}>
+            <View style={[styles.benefit, { backgroundColor: theme.colors.primary.light }]}>
               <Text style={styles.benefitIcon}>🔐</Text>
-              <Text style={styles.benefitText}>More secure</Text>
+              <Text style={[styles.benefitText, { color: theme.colors.text.primary }]}>More secure</Text>
             </View>
-            <View style={styles.benefit}>
+            <View style={[styles.benefit, { backgroundColor: theme.colors.primary.light }]}>
               <Text style={styles.benefitIcon}>✨</Text>
-              <Text style={styles.benefitText}>Convenient</Text>
+              <Text style={[styles.benefitText, { color: theme.colors.text.primary }]}>Convenient</Text>
             </View>
           </View>
 
@@ -91,11 +92,11 @@ export default function BiometricSetupPopup({
             style={styles.enableButton}
           />
 
-          <Text style={styles.skipButton} onPress={handleSkip}>
+          <Text style={[styles.skipButton, { color: theme.colors.text.secondary }]} onPress={handleSkip}>
             Maybe Later
           </Text>
 
-          <Text style={styles.disclaimer}>
+          <Text style={[styles.disclaimer, { color: theme.colors.text.disabled }]}>
             You can enable or disable this anytime in Settings
           </Text>
         </GlassCard>
@@ -110,67 +111,61 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.lg,
+    padding: 20,
   },
   popup: {
     width: '100%',
     maxWidth: 400,
-    padding: theme.spacing.xl,
+    padding: 24,
     alignItems: 'center',
   },
   icon: {
     fontSize: 80,
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   title: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
     textAlign: 'center',
   },
   message: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
     lineHeight: 22,
   },
   benefits: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
+    gap: 12,
+    marginBottom: 24,
   },
   benefit: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: theme.colors.primary.light,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    padding: 12,
+    borderRadius: 10,
   },
   benefitIcon: {
     fontSize: 24,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   benefitText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 13,
+    fontWeight: '500',
     textAlign: 'center',
   },
   enableButton: {
     width: '100%',
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   skipButton: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
-    fontWeight: theme.typography.fontWeight.semibold,
-    marginBottom: theme.spacing.lg,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 20,
   },
   disclaimer: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.disabled,
+    fontSize: 11,
     textAlign: 'center',
   },
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -19,17 +19,27 @@ export default function GlassCard({
   gradient = false,
   gradientColors,
 }: GlassCardProps) {
+  const { theme, isDark } = useTheme();
+
+  const containerStyle = {
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden' as const,
+    ...theme.shadows.md,
+    backgroundColor: theme.colors.background.card,
+    ...(isDark && { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }),
+  };
+
   if (gradient && gradientColors) {
     return (
-      <View style={[styles.container, style]}>
+      <View style={[containerStyle, style]}>
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.gradientBackground}
+          style={{ borderRadius: theme.borderRadius.lg }}
         >
-          <BlurView intensity={intensity} tint="light" style={styles.blur}>
-            <View style={styles.content}>{children}</View>
+          <BlurView intensity={intensity} tint={isDark ? 'dark' : 'light'} style={{ overflow: 'hidden', borderRadius: theme.borderRadius.lg }}>
+            <View style={{ padding: theme.spacing.md }}>{children}</View>
           </BlurView>
         </LinearGradient>
       </View>
@@ -37,34 +47,17 @@ export default function GlassCard({
   }
 
   return (
-    <View style={[styles.container, style]}>
-      <BlurView intensity={intensity} tint="light" style={styles.blur}>
-        <View style={[styles.glassEffect, styles.content]}>{children}</View>
+    <View style={[containerStyle, style]}>
+      <BlurView intensity={intensity} tint={isDark ? 'dark' : 'light'} style={{ overflow: 'hidden', borderRadius: theme.borderRadius.lg }}>
+        <View style={{
+          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.colors.glass.light,
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : theme.colors.glass.border,
+          padding: theme.spacing.md,
+        }}>
+          {children}
+        </View>
       </BlurView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-    backgroundColor: theme.colors.background.card,
-  },
-  blur: {
-    overflow: 'hidden',
-    borderRadius: theme.borderRadius.lg,
-  },
-  gradientBackground: {
-    borderRadius: theme.borderRadius.lg,
-  },
-  glassEffect: {
-    backgroundColor: theme.colors.glass.light,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-  },
-  content: {
-    padding: theme.spacing.md,
-  },
-});

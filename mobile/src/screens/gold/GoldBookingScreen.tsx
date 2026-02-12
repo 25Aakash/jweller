@@ -11,9 +11,11 @@ import PriceTrend from '../../components/PriceTrend';
 import GoldPriceChart from '../../components/GoldPriceChart';
 import SkeletonCard from '../../components/SkeletonCard';
 import SuccessAnimation from '../../components/SuccessAnimation';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function GoldBookingScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
   const [previousPrice, setPreviousPrice] = useState<number>(0);
   const [grams, setGrams] = useState('');
@@ -254,7 +256,7 @@ export default function GoldBookingScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

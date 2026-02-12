@@ -6,7 +6,7 @@ import GradientButton from '../components/GradientButton';
 import GlassCard from '../components/GlassCard';
 import SuccessAnimation from '../components/SuccessAnimation';
 import BiometricSetupPopup from '../components/BiometricSetupPopup';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   route: any;
@@ -14,6 +14,8 @@ interface Props {
 }
 
 export default function OTPVerificationScreen({ route, navigation }: Props) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const { phoneNumber, name, password, state, city } = route.params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -171,7 +173,7 @@ export default function OTPVerificationScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

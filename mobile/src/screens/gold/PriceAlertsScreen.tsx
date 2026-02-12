@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import GlassCard from '../../components/GlassCard';
 import GradientButton from '../../components/GradientButton';
 import EmptyState from '../../components/EmptyState';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PriceAlert {
   id: string;
@@ -17,6 +17,8 @@ interface PriceAlert {
 const ALERTS_KEY = 'price_alerts';
 
 export default function PriceAlertsScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [targetPrice, setTargetPrice] = useState('');
   const [loading, setLoading] = useState(false);
@@ -197,7 +199,7 @@ export default function PriceAlertsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

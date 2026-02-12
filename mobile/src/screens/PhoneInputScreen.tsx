@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import GlassCard from '../components/GlassCard';
 import GradientButton from '../components/GradientButton';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   navigation: any;
@@ -13,6 +13,8 @@ interface Props {
 }
 
 export default function PhoneInputScreen({ navigation, route }: Props) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const { name: registeredName, phoneNumber: registeredPhone } = route.params || {};
   const [phoneNumber, setPhoneNumber] = useState(registeredPhone || '');
   const [loading, setLoading] = useState(false);
@@ -92,7 +94,7 @@ export default function PhoneInputScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

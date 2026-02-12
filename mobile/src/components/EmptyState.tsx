@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import GradientButton from './GradientButton';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface EmptyStateProps {
   emoji: string;
@@ -18,11 +18,13 @@ export default function EmptyState({
   actionText,
   onAction,
 }: EmptyStateProps) {
+  const { theme } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.emoji}>{emoji}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+    <View style={[styles.container, { padding: theme.spacing.xxl }]}>
+      <Text style={[styles.emoji, { marginBottom: theme.spacing.lg }]}>{emoji}</Text>
+      <Text style={[styles.title, { color: theme.colors.text.primary, fontSize: theme.typography.fontSize.xl, fontWeight: theme.typography.fontWeight.bold, marginBottom: theme.spacing.sm }]}>{title}</Text>
+      <Text style={[styles.message, { color: theme.colors.text.secondary, fontSize: theme.typography.fontSize.md, marginBottom: theme.spacing.lg }]}>{message}</Text>
       {actionText && onAction && (
         <GradientButton
           title={actionText}
@@ -39,24 +41,15 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: theme.spacing.xxl,
   },
   emoji: {
     fontSize: 64,
-    marginBottom: theme.spacing.lg,
   },
   title: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },
   message: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
     textAlign: 'center',
-    marginBottom: theme.spacing.lg,
     lineHeight: 24,
   },
   button: {

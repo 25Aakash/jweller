@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Dimensions, StyleSheet } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { theme } from '../theme/theme';
+import { useTheme } from '../context/ThemeContext';
 
 interface GoldPriceChartProps {
   data: number[];
@@ -9,6 +9,7 @@ interface GoldPriceChartProps {
 }
 
 export default function GoldPriceChart({ data, labels }: GoldPriceChartProps) {
+  const { theme } = useTheme();
   const screenWidth = Dimensions.get('window').width - theme.spacing.lg * 2;
 
   return (
@@ -61,9 +62,9 @@ export default function GoldPriceChart({ data, labels }: GoldPriceChartProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginVertical: theme.spacing.md,
+    marginVertical: 16,
   },
   chart: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 16,
   },
 });

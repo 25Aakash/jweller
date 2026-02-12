@@ -5,9 +5,11 @@ import { GoldBooking } from '../../types';
 import GlassCard from '../../components/GlassCard';
 import EmptyState from '../../components/EmptyState';
 import SkeletonCard from '../../components/SkeletonCard';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function BookingsScreen() {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme);
   const [bookings, setBookings] = useState<GoldBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -179,7 +181,7 @@ export default function BookingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
