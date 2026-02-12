@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { goldAPI } from '../../api/endpoints';
 import { GoldBooking } from '../../types';
-import GlassCard from '../../components/GlassCard';
-import EmptyState from '../../components/EmptyState';
-import SkeletonCard from '../../components/SkeletonCard';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function BookingsScreen() {
   const { theme, isDark } = useTheme();
-  const styles = createStyles(theme);
+  const darkCardBorder = isDark ? { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' } : {};
+
   const [bookings, setBookings] = useState<GoldBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     loadBookings();
@@ -38,11 +38,11 @@ export default function BookingsScreen() {
 
   const filteredBookings = bookings.filter((b) => {
     if (filter === 'all') return true;
-    return b.status === filter;
+    return b.status?.toLowerCase() === filter;
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'completed':
         return theme.colors.secondary.main;
       case 'pending':
@@ -56,244 +56,111 @@ export default function BookingsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-        <View style={styles.skeletonContainer}>
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
-
-      {/* Filter Chips */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filter === 'all' && styles.filterChipActive,
-            { borderColor: theme.colors.primary.pastel },
-            filter === 'all' && { borderColor: theme.colors.primary.main, backgroundColor: theme.colors.primary.light },
+      {/* Filter */}
+      <View style={{ padding: 12 }}>
+        <SegmentedButtons
+          value={filter}
+          onValueChange={setFilter}
+          buttons={[
+            { value: 'all', label: 'All' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'completed', label: 'Completed' },
           ]}
-          onPress={() => setFilter('all')}
-        >
-          <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filter === 'pending' && styles.filterChipActive,
-            { borderColor: theme.colors.primary.pastel },
-            filter === 'pending' && { borderColor: '#F59E0B', backgroundColor: '#FEF3C7' },
-          ]}
-          onPress={() => setFilter('pending')}
-        >
-          <Text style={[styles.filterText, filter === 'pending' && styles.filterTextActive]}>Pending</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            filter === 'completed' && styles.filterChipActive,
-            { borderColor: theme.colors.primary.pastel },
-            filter === 'completed' && { borderColor: theme.colors.secondary.main, backgroundColor: theme.colors.secondary.light },
-          ]}
-          onPress={() => setFilter('completed')}
-        >
-          <Text style={[styles.filterText, filter === 'completed' && styles.filterTextActive]}>Completed</Text>
-        </TouchableOpacity>
+          style={{ backgroundColor: theme.colors.background.card }}
+        />
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 10 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary.main}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary.main} />
         }
       >
-        <View style={styles.content}>
-          {filteredBookings.length === 0 ? (
-            <EmptyState
-              emoji="📦"
-              title="No Bookings"
-              message="You don't have any gold bookings yet. Start booking gold to secure the best prices!"
-            />
-          ) : (
-            filteredBookings.map((booking) => (
-              <GlassCard key={booking.id} intensity={90} style={styles.bookingCard}>
+        {filteredBookings.length === 0 ? (
+          <Card style={[styles.emptyCard, { backgroundColor: theme.colors.background.card }, darkCardBorder]}>
+            <Card.Content style={{ alignItems: 'center', paddingVertical: 40 }}>
+              <MaterialCommunityIcons name="package-variant" size={48} color={theme.colors.text.disabled} />
+              <Text variant="titleMedium" style={{ color: theme.colors.text.secondary, marginTop: 12 }}>
+                No Bookings
+              </Text>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.disabled, textAlign: 'center', marginTop: 4 }}>
+                You don't have any gold bookings yet. Start booking gold to secure the best prices!
+              </Text>
+            </Card.Content>
+          </Card>
+        ) : (
+          filteredBookings.map((booking) => (
+            <Card key={booking.id} style={[styles.bookingCard, { backgroundColor: theme.colors.background.card }, darkCardBorder]}>
+              <Card.Content>
                 <View style={styles.bookingHeader}>
-                  <Text style={styles.bookingTitle}>🏆 Gold Booking</Text>
-                  <View
-                    style={[
-                      styles.statusChip,
-                      { backgroundColor: getStatusColor(booking.status) + '30' },
-                    ]}
-                  >
-                    <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-                      {booking.status.toUpperCase()}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <MaterialCommunityIcons name="gold" size={24} color="#FFD700" />
+                    <Text variant="titleMedium" style={{ color: theme.colors.text.primary, fontWeight: '700' }}>
+                      Gold Booking
+                    </Text>
+                  </View>
+                  <View style={[styles.statusChip, { backgroundColor: getStatusColor(booking.status) + '20' }]}>
+                    <Text variant="labelSmall" style={{ color: getStatusColor(booking.status), fontWeight: '700' }}>
+                      {booking.status?.toUpperCase()}
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }]} />
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Gold Amount:</Text>
-                  <Text style={styles.detailValue}>{booking.grams.toFixed(3)} grams</Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>Gold Amount</Text>
+                  <Text variant="titleSmall" style={{ color: theme.colors.text.primary }}>{booking.grams?.toFixed(3)} grams</Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Locked Price:</Text>
-                  <Text style={styles.detailValue}>₹{booking.locked_price.toFixed(2)}/gram</Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>Locked Price</Text>
+                  <Text variant="titleSmall" style={{ color: theme.colors.text.primary }}>₹{booking.locked_price?.toFixed(2)}/gram</Text>
                 </View>
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Total Amount:</Text>
-                  <Text style={styles.totalAmount}>₹{booking.amount.toFixed(2)}</Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>Total Amount</Text>
+                  <Text variant="titleSmall" style={{ color: theme.colors.primary.main, fontWeight: '700' }}>₹{booking.amount?.toFixed(2)}</Text>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }]} />
 
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabelSmall}>Booking Date:</Text>
-                  <Text style={styles.detailValueSmall}>
+                  <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>Date</Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>
                     {new Date(booking.created_at).toLocaleDateString()}
                   </Text>
                 </View>
-
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabelSmall}>Booking ID:</Text>
-                  <Text style={styles.idText}>{booking.id.substring(0, 8)}...</Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>ID</Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>
+                    {booking.id?.substring(0, 8)}...
+                  </Text>
                 </View>
-              </GlassCard>
-            ))
-          )}
-        </View>
+              </Card.Content>
+            </Card>
+          ))
+        )}
       </ScrollView>
     </View>
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: theme.colors.primary.light,
-    opacity: 0.2,
-    top: -100,
-    right: -100,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: theme.colors.secondary.light,
-    opacity: 0.2,
-    bottom: -50,
-    left: -50,
-  },
-  skeletonContainer: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    padding: theme.spacing.lg,
-    gap: theme.spacing.sm,
-    backgroundColor: 'transparent',
-  },
-  filterChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.round,
-    borderWidth: 2,
-  },
-  filterChipActive: {
-    // backgroundColor set dynamically
-  },
-  filterText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
-  },
-  filterTextActive: {
-    color: theme.colors.text.primary,
-  },
-  content: {
-    padding: theme.spacing.lg,
-    paddingTop: 0,
-  },
-  bookingCard: {
-    marginBottom: theme.spacing.md,
-  },
-  bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  bookingTitle: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  statusChip: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-  },
-  statusText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.primary.pastel,
-    marginVertical: theme.spacing.sm,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.xs,
-  },
-  detailLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-  },
-  detailValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  totalAmount: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary.main,
-  },
-  detailLabelSmall: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.disabled,
-  },
-  detailValueSmall: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-  },
-  idText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    fontFamily: 'monospace',
-  },
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyCard: { margin: 10, borderRadius: 12 },
+  bookingCard: { marginBottom: 10, borderRadius: 12 },
+  bookingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  statusChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  divider: { height: 1, marginVertical: 10 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
 });

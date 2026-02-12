@@ -16,6 +16,7 @@ import JewellerTabNavigator from './src/navigation/JewellerTabNavigator';
 import AddMoneyScreen from './src/screens/wallet/AddMoneyScreen';
 import TransactionsScreen from './src/screens/wallet/TransactionsScreen';
 import BookGoldScreen from './src/screens/gold/BookGoldScreen';
+import GoldBookingScreen from './src/screens/gold/GoldBookingScreen';
 import BookingsScreen from './src/screens/gold/BookingsScreen';
 import SilverBookingScreen from './src/screens/silver/SilverBookingScreen';
 import SilverBookingsScreen from './src/screens/silver/SilverBookingsScreen';
@@ -73,6 +74,11 @@ function AppNavigator() {
                 <Stack.Screen
                   name="BookGold"
                   component={BookGoldScreen}
+                  options={{ title: 'Book Gold' }}
+                />
+                <Stack.Screen
+                  name="GoldBooking"
+                  component={GoldBookingScreen}
                   options={{ title: 'Book Gold' }}
                 />
                 <Stack.Screen

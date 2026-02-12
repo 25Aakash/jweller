@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, ActivityIndicator, List } from 'react-native-paper';
+import { Text, Card, Button, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { walletAPI, goldAPI } from '../api/endpoints';
-import { WalletBalance, GoldPrice } from '../types';
+import { walletAPI, goldAPI, silverAPI } from '../api/endpoints';
+import { WalletBalance, GoldPrice, SilverPrice } from '../types';
 import { getGreeting } from '../utils/greetings';
 
 export default function HomeScreen({ navigation }: any) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme, isDark } = useTheme();
   const [wallet, setWallet] = useState<WalletBalance | null>(null);
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
+  const [silverPrice, setSilverPrice] = useState<SilverPrice | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -25,12 +26,14 @@ export default function HomeScreen({ navigation }: any) {
 
   const loadData = async () => {
     try {
-      const [walletData, goldData] = await Promise.all([
+      const [walletData, goldData, silverData] = await Promise.all([
         walletAPI.getBalance(),
         goldAPI.getCurrentPrice(),
+        silverAPI.getCurrentPrice(),
       ]);
       setWallet(walletData);
       setGoldPrice(goldData);
+      setSilverPrice(silverData);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error loading data:', error);
@@ -111,12 +114,12 @@ export default function HomeScreen({ navigation }: any) {
 
         <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
           <Card.Content>
-            <MaterialCommunityIcons name="chart-line" size={32} color={theme.colors.success} />
+            <MaterialCommunityIcons name="circle-multiple" size={32} color="#C0C0C0" />
             <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
-              {goldPrice?.margin_percent || '0'}%
+              ₹{silverPrice?.final_price?.toFixed(0) || '0'}
             </Text>
             <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Margin
+              Silver Price/g
             </Text>
           </Card.Content>
         </Card>
@@ -128,7 +131,7 @@ export default function HomeScreen({ navigation }: any) {
               ₹{goldPrice?.base_mcx_price?.toFixed(0) || '0'}
             </Text>
             <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Base MCX
+              Gold MCX
             </Text>
           </Card.Content>
         </Card>
@@ -146,7 +149,7 @@ export default function HomeScreen({ navigation }: any) {
           style={styles.actionButton}
           buttonColor={theme.colors.primary.main}
           textColor="#fff"
-          onPress={() => navigation.navigate('Wallet')}
+          onPress={() => navigation.navigate('AddMoney')}
         >
           Add Money to Wallet
         </Button>
@@ -163,56 +166,34 @@ export default function HomeScreen({ navigation }: any) {
         </Button>
 
         <Button
+          mode="contained"
+          icon="circle-multiple"
+          style={styles.actionButton}
+          buttonColor="#C0C0C0"
+          textColor="#000"
+          onPress={() => navigation.navigate('SilverBooking')}
+        >
+          Buy Silver Now
+        </Button>
+
+        <Button
           mode="outlined"
           icon="book-open-variant"
           style={[styles.actionButton, { borderColor: theme.colors.primary.main }]}
           textColor={theme.colors.primary.main}
           onPress={() => navigation.navigate('Bookings')}
         >
-          View My Bookings
+          View My Gold Bookings
         </Button>
-      </View>
 
-      {/* Account Info */}
-      <Card style={[styles.infoCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-        <Card.Content>
-          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
-            Account Information
-          </Text>
-          <List.Item
-            title="Phone"
-            description={user?.phone_number || 'N/A'}
-            titleStyle={{ color: theme.colors.text.primary }}
-            descriptionStyle={{ color: theme.colors.text.secondary }}
-            left={(props) => <List.Icon {...props} icon="phone" color={theme.colors.primary.main} />}
-          />
-          <List.Item
-            title="Location"
-            description={user?.city && user?.state ? `${user.city}, ${user.state}` : 'Not available'}
-            titleStyle={{ color: theme.colors.text.primary }}
-            descriptionStyle={{ color: theme.colors.text.secondary }}
-            left={(props) => <List.Icon {...props} icon="map-marker" color={theme.colors.primary.main} />}
-          />
-          <List.Item
-            title="Role"
-            description={user?.role || 'Customer'}
-            titleStyle={{ color: theme.colors.text.primary }}
-            descriptionStyle={{ color: theme.colors.text.secondary }}
-            left={(props) => <List.Icon {...props} icon="account" color={theme.colors.primary.main} />}
-          />
-        </Card.Content>
-      </Card>
-
-      {/* Logout */}
-      <View style={styles.logoutSection}>
         <Button
           mode="outlined"
-          icon="logout"
-          style={[styles.actionButton, { borderColor: theme.colors.error }]}
-          textColor={theme.colors.error}
-          onPress={logout}
+          icon="book-open-variant"
+          style={[styles.actionButton, { borderColor: '#C0C0C0' }]}
+          textColor={theme.colors.text.primary}
+          onPress={() => navigation.navigate('SilverBookings')}
         >
-          Logout
+          View My Silver Bookings
         </Button>
       </View>
     </ScrollView>
@@ -264,12 +245,5 @@ const styles = StyleSheet.create({
   actionButton: {
     marginBottom: 10,
     borderRadius: 10,
-  },
-  infoCard: {
-    margin: 10,
-    borderRadius: 12,
-  },
-  logoutSection: {
-    padding: 20,
   },
 });
