@@ -137,22 +137,22 @@ export const jewellerAPI = {
 
     getAllCustomers: async () => {
         const response = await apiClient.get('/jeweller/customers');
-        return response.data;
+        return response.data?.data || response.data || [];
     },
 
     getCustomerDetails: async (customerId: string) => {
         const response = await apiClient.get(`/jeweller/customers/${customerId}`);
-        return response.data;
+        return response.data?.data || response.data;
     },
 
     getAllTransactions: async () => {
         const response = await apiClient.get('/jeweller/transactions');
-        return response.data;
+        return response.data?.data || response.data || [];
     },
 
     getAllBookings: async () => {
         const response = await apiClient.get('/jeweller/bookings');
-        return response.data;
+        return response.data?.data || response.data || [];
     },
 
     updateGoldPrice: async (baseMcxPrice: number, marginPercent: number, marginFixed: number) => {
