@@ -151,7 +151,7 @@ export const setMCXPrice = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const { base_mcx_price, effective_date } = req.body;
+        const { base_mcx_price, margin_percent, margin_fixed, effective_date } = req.body;
         const jewellerId = req.user!.jeweller_id;
         const updatedBy = req.user!.user_id;
 
@@ -159,7 +159,9 @@ export const setMCXPrice = async (
             jewellerId,
             base_mcx_price,
             updatedBy,
-            effective_date ? new Date(effective_date) : undefined
+            effective_date ? new Date(effective_date) : undefined,
+            margin_percent,
+            margin_fixed
         );
 
         res.status(200).json({

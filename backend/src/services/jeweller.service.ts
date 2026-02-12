@@ -164,6 +164,12 @@ export const updateGoldPrice = async (
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Update margins on the Jeweller model so getLivePrice picks them up
+        await Jeweller.findOneAndUpdate(
+            { jeweller_id: jewellerId },
+            { $set: { margin_percentage: marginPercent, margin_fixed: marginFixed } }
+        );
+
         const priceConfig = await GoldPriceConfig.findOneAndUpdate(
             { jeweller_id: jewellerId, effective_date: today },
             {
@@ -178,7 +184,7 @@ export const updateGoldPrice = async (
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
-        logger.info(`Gold price updated for jeweller ${jewellerId}: ₹${finalPrice}/g`);
+        logger.info(`Gold price updated for jeweller ${jewellerId}: ₹${finalPrice}/g (margin: ${marginPercent}% + ₹${marginFixed})`);
         return priceConfig;
     } catch (error) {
         logger.error('Error in updateGoldPrice:', error);

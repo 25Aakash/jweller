@@ -33,7 +33,9 @@ export const setSilverMCXPrice = async (
     jewellerId: string,
     baseMcxPrice: number,
     updatedBy: string,
-    effectiveDate?: Date
+    effectiveDate?: Date,
+    overrideMarginPercent?: number,
+    overrideMarginFixed?: number
 ): Promise<any> => {
     try {
         if (baseMcxPrice <= 0) {
@@ -49,8 +51,18 @@ export const setSilverMCXPrice = async (
             throw new NotFoundError('Jeweller not found');
         }
 
-        const marginPercent = (jeweller as any).silver_margin_percentage || 0;
-        const marginFixed = (jeweller as any).silver_margin_fixed || 0;
+        // Use override values if provided, otherwise fall back to stored values
+        const marginPercent = overrideMarginPercent !== undefined ? overrideMarginPercent : ((jeweller as any).silver_margin_percentage || 0);
+        const marginFixed = overrideMarginFixed !== undefined ? overrideMarginFixed : ((jeweller as any).silver_margin_fixed || 0);
+
+        // Update margins on the Jeweller model so getLivePrice picks them up
+        if (overrideMarginPercent !== undefined || overrideMarginFixed !== undefined) {
+            await Jeweller.findOneAndUpdate(
+                { jeweller_id: jewellerId },
+                { $set: { silver_margin_percentage: marginPercent, silver_margin_fixed: marginFixed } }
+            );
+        }
+
         const marginAmount = (baseMcxPrice * marginPercent) / 100;
         const finalPrice = baseMcxPrice + marginAmount + marginFixed;
 
