@@ -12,6 +12,9 @@ dotenv.config();
 
 const app: Application = express();
 
+// Trust proxy (Render, Railway, etc. sit behind a reverse proxy)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(securityHeaders);
