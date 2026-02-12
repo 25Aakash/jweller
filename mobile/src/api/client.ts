@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://192.168.1.33:3000/api';
+const API_BASE_URL = 'https://jweller-1.onrender.com/api';
 const JEWELLER_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 const apiClient = axios.create({

@@ -15,6 +15,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.riddhisiddhi.jweller",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -28,10 +29,18 @@
     "updates": {
       "enabled": true,
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/your-project-id"
+      "url": "https://u.expo.dev/0e931fc7-ae38-4798-ab83-9b6aa7636940"
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0e931fc7-ae38-4798-ab83-9b6aa7636940"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
