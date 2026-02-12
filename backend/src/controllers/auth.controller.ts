@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as otpService from '../services/otp.service';
 import * as authService from '../services/auth.service';
 import { ValidationError } from '../utils/errors';
+import { User, Jeweller } from '../models';
 
 /**
  * Send OTP to phone number
@@ -211,6 +212,62 @@ export const getCurrentUser = async (
         res.status(200).json({
             success: true,
             user: req.user,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * One-time setup: Create Jeweller + first Admin account
+ * Only works if no admin user exists yet
+ */
+export const setupJeweller = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { jeweller_name, email, password, admin_name, phone_number } = req.body;
+
+        // Check if any admin already exists - if so, block setup
+        const existingAdmin = await User.findOne({ role: 'ADMIN' });
+        if (existingAdmin) {
+            res.status(403).json({
+                success: false,
+                error: 'Setup already completed. Use admin login instead.',
+            });
+            return;
+        }
+
+        const jewellerId = '550e8400-e29b-41d4-a716-446655440000';
+
+        // Create or update jeweller
+        await Jeweller.findOneAndUpdate(
+            { jeweller_id: jewellerId },
+            {
+                jeweller_id: jewellerId,
+                name: jeweller_name || 'Riddhi Siddhi Trading Co.',
+                margin_percentage: 3,
+                margin_fixed: 0,
+            },
+            { upsert: true, new: true }
+        );
+
+        // Create admin user
+        const admin = await authService.createAdminUser(
+            jewellerId,
+            email,
+            password,
+            admin_name,
+            phone_number
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Jeweller setup completed. You can now login as admin.',
+            jeweller_id: jewellerId,
+            admin,
         });
     } catch (error) {
         next(error);

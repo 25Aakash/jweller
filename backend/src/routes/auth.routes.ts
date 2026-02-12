@@ -10,9 +10,21 @@ import {
     loginSchema,
     adminLoginSchema,
     refreshTokenSchema,
+    setupSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
+
+/**
+ * @route   POST /api/auth/setup
+ * @desc    One-time setup: Create jeweller + first admin
+ * @access  Public (only works if no admin exists)
+ */
+router.post(
+    '/setup',
+    validateBody(setupSchema),
+    authController.setupJeweller
+);
 
 /**
  * @route   POST /api/auth/send-otp

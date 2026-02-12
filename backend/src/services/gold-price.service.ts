@@ -44,7 +44,7 @@ export const setMCXPrice = async (
         const dayStart = new Date(date);
         dayStart.setHours(0, 0, 0, 0);
 
-        const jeweller = await Jeweller.findById(jewellerId).lean();
+        const jeweller = await Jeweller.findOne({ jeweller_id: jewellerId }).lean();
         if (!jeweller) {
             throw new NotFoundError('Jeweller not found');
         }
@@ -101,8 +101,8 @@ export const updateJewellerMargin = async (
             throw new ValidationError('No margin values provided');
         }
 
-        const jeweller = await Jeweller.findByIdAndUpdate(
-            jewellerId,
+        const jeweller = await Jeweller.findOneAndUpdate(
+            { jeweller_id: jewellerId },
             { $set: update },
             { new: true }
         );
@@ -126,9 +126,18 @@ export const getLiveGoldPriceForJeweller = async (jewellerId: string): Promise<a
     try {
         const liveBasePrice = await fetchLiveGoldPrice();
 
-        const jeweller = await Jeweller.findById(jewellerId).lean();
+        const jeweller = await Jeweller.findOne({ jeweller_id: jewellerId }).lean();
         if (!jeweller) {
-            throw new NotFoundError('Jeweller not found');
+            // No jeweller config found, use 0 margins
+            logger.warn(`No jeweller config for ${jewellerId}, using 0 margins`);
+            return {
+                base_mcx_price: liveBasePrice,
+                jeweller_margin_percent: 0,
+                jeweller_margin_fixed: 0,
+                final_price: Math.round(liveBasePrice * 100) / 100,
+                source: 'live',
+                fetched_at: new Date().toISOString(),
+            };
         }
 
         const marginPercent = jeweller.margin_percentage || 0;

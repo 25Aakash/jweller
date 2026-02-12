@@ -99,3 +99,25 @@ export const refreshTokenSchema = Joi.object({
         'any.required': 'Refresh token is required',
     }),
 });
+
+export const setupSchema = Joi.object({
+    jeweller_name: Joi.string().min(2).max(200).optional(),
+    email: Joi.string().email().required().messages({
+        'string.email': 'Invalid email format',
+        'any.required': 'Email is required',
+    }),
+    password: Joi.string().min(6).required().messages({
+        'string.min': 'Password must be at least 6 characters',
+        'any.required': 'Password is required',
+    }),
+    admin_name: Joi.string().min(2).max(100).required().messages({
+        'any.required': 'Admin name is required',
+    }),
+    phone_number: Joi.string()
+        .pattern(/^(\+91)?[6-9]\d{9}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid phone number format',
+            'any.required': 'Phone number is required',
+        }),
+});
