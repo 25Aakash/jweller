@@ -22,9 +22,6 @@ export default function OTPVerificationScreen({ route, navigation }: Props) {
   const [showBiometricSetup, setShowBiometricSetup] = useState(false);
   const inputRefs = useRef<(RNTextInput | null)[]>([]);
 
-  // Default jeweller ID for single jeweller app
-  const JEWELLER_ID = 'default-jeweller-id'; // This should match your backend configuration
-
   useEffect(() => {
     sendOTP();
     inputRefs.current[0]?.focus();
@@ -39,7 +36,7 @@ export default function OTPVerificationScreen({ route, navigation }: Props) {
 
   const sendOTP = async () => {
     try {
-      await authAPI.sendOTP(phoneNumber, JEWELLER_ID);
+      await authAPI.sendOTP(phoneNumber);
       setResendTimer(60);
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.error || 'Failed to send OTP');
@@ -82,7 +79,7 @@ export default function OTPVerificationScreen({ route, navigation }: Props) {
 
     setLoading(true);
     try {
-      await authAPI.register(phoneNumber, code, JEWELLER_ID, name, password, state, city);
+      await authAPI.registerWithOTP(phoneNumber, code, name, password, state, city);
       setShowSuccess(true);
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.error || 'Invalid OTP');

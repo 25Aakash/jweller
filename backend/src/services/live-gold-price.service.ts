@@ -57,7 +57,8 @@ export const fetchLiveGoldPrice = async (): Promise<number> => {
  * Official gold rates for India, already in grams and INR
  */
 async function fetchFromIBJA(): Promise<number> {
-    const apiKey = process.env.METALS_DEV_API_KEY || '2AI8U3R1DCAORLBKZXDG211BKZXDG';
+    const apiKey = process.env.METALS_DEV_API_KEY;
+    if (!apiKey) throw new Error('METALS_DEV_API_KEY not configured');
 
     const response = await axios.get(
         `https://api.metals.dev/v1/metal/authority?api_key=${apiKey}&authority=ibja&currency=INR&unit=g`,
@@ -76,8 +77,11 @@ async function fetchFromIBJA(): Promise<number> {
  * Source 2: metals.dev free API (no API key needed, 24K gold in INR)
  */
 async function fetchFromMetalPriceAPI(): Promise<number> {
+    const apiKey = process.env.METALS_DEV_API_KEY;
+    if (!apiKey) throw new Error('METALS_DEV_API_KEY not configured');
+
     const response = await axios.get(
-        'https://api.metals.dev/v1/latest?api_key=demo&currency=INR&unit=gram',
+        `https://api.metals.dev/v1/latest?api_key=${apiKey}&currency=INR&unit=gram`,
         { timeout: 10000 }
     );
 
