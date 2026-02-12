@@ -7,7 +7,7 @@ import AnimatedNumber from '../../components/AnimatedNumber';
 import SkeletonCard from '../../components/SkeletonCard';
 import EmptyState from '../../components/EmptyState';
 import QuickActionButton from '../../components/QuickActionButton';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Transaction {
   id: string;
@@ -18,6 +18,7 @@ interface Transaction {
 }
 
 export default function WalletScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,11 +91,12 @@ export default function WalletScreen({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
+      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.secondary.light }]} />
+      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.primary.light }]} />
 
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -124,14 +126,14 @@ export default function WalletScreen({ navigation }: any) {
                   title="Add Money"
                   icon="+"
                   onPress={() => navigation.navigate('AddMoney')}
-                  colors={['#FFFFFF', '#F0F0F0'] as const}
+                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
                   style={styles.actionButton}
                 />
                 <QuickActionButton
                   title="Withdraw"
                   icon="−"
                   onPress={() => navigation.navigate('Withdraw')}
-                  colors={['#FFFFFF', '#F0F0F0'] as const}
+                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
                   style={styles.actionButton}
                 />
               </View>
@@ -140,9 +142,9 @@ export default function WalletScreen({ navigation }: any) {
 
           {/* Transactions */}
           <View style={styles.transactionsHeader}>
-            <Text style={styles.transactionsTitle}>Recent Transactions</Text>
+            <Text style={[styles.transactionsTitle, { color: theme.colors.text.primary }]}>Recent Transactions</Text>
             <TouchableOpacity>
-              <Text style={styles.viewAll}>View All →</Text>
+              <Text style={[styles.viewAll, { color: theme.colors.primary.main }]}>View All →</Text>
             </TouchableOpacity>
           </View>
 
@@ -163,10 +165,10 @@ export default function WalletScreen({ navigation }: any) {
                       {getTransactionIcon(transaction.type)}
                     </Text>
                     <View>
-                      <Text style={styles.transactionType}>
+                      <Text style={[styles.transactionType, { color: theme.colors.text.primary }]}>
                         {transaction.type.replace('_', ' ')}
                       </Text>
-                      <Text style={styles.transactionDate}>
+                      <Text style={[styles.transactionDate, { color: theme.colors.text.secondary }]}>
                         {new Date(transaction.created_at).toLocaleDateString()}
                       </Text>
                     </View>
@@ -184,7 +186,7 @@ export default function WalletScreen({ navigation }: any) {
                         : '-'}
                       ₹{transaction.amount.toFixed(2)}
                     </Text>
-                    <Text style={styles.transactionStatus}>{transaction.status}</Text>
+                    <Text style={[styles.transactionStatus, { color: theme.colors.text.disabled }]}>{transaction.status}</Text>
                   </View>
                 </View>
               </GlassCard>
@@ -205,7 +207,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: theme.colors.secondary.light,
     opacity: 0.2,
     top: 50,
     right: -100,
@@ -215,7 +216,6 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: theme.colors.primary.light,
     opacity: 0.2,
     bottom: 100,
     left: -80,
@@ -224,34 +224,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skeletonContainer: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    padding: 24,
+    gap: 24,
   },
   content: {
-    padding: theme.spacing.lg,
+    padding: 24,
   },
   balanceCard: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
   },
   balanceContent: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: 24,
   },
   balanceLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
-    marginBottom: theme.spacing.sm,
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   balanceAmount: {
     fontSize: 48,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.lg,
+    fontWeight: '700',
+    marginBottom: 24,
   },
   quickActions: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: 16,
   },
   actionButton: {
     flex: 1,
@@ -260,20 +258,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   transactionsTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    fontWeight: '700',
   },
   viewAll: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary.main,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: 14,
+    fontWeight: '600',
   },
   transactionCard: {
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   transactionContent: {
     flexDirection: 'row',
@@ -283,33 +279,30 @@ const styles = StyleSheet.create({
   transactionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: 16,
     flex: 1,
   },
   transactionIcon: {
     fontSize: 32,
   },
   transactionType: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   transactionDate: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
     marginTop: 2,
   },
   transactionRight: {
     alignItems: 'flex-end',
   },
   transactionAmount: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 16,
+    fontWeight: '700',
   },
   transactionStatus: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.disabled,
+    fontSize: 12,
     marginTop: 2,
     textTransform: 'capitalize',
   },

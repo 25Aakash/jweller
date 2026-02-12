@@ -1,75 +1,69 @@
 /**
  * Dark Theme Configuration
- * For dark mode support
+ * Instagram / WhatsApp inspired — warm dark grays, not pure black
  */
 
 import { Theme } from './theme';
 
 export const darkTheme: Theme = {
     colors: {
-        // Soft Pastel Primary Colors (adjusted for dark)
         primary: {
-            light: '#A5B4FC', // Lighter indigo for dark bg
-            main: '#818CF8', // Soft indigo
-            dark: '#6366F1', // Medium indigo
-            pastel: '#C7D2FE', // Pastel indigo
+            light: '#7C8AFF',
+            main: '#818CF8',
+            dark: '#A5B4FC',
+            pastel: '#3B3F7A',
         },
 
         secondary: {
-            light: '#6EE7B7', // Lighter emerald
-            main: '#34D399', // Soft emerald
-            dark: '#10B981', // Medium emerald
-            pastel: '#A7F3D0', // Pastel emerald
+            light: '#34D399',
+            main: '#6EE7B7',
+            dark: '#A7F3D0',
+            pastel: '#1A3D30',
         },
 
         accent: {
-            pink: '#FBCFE8', // Soft pink
-            peach: '#FED7AA', // Soft peach
-            lavender: '#DDD6FE', // Soft lavender
-            mint: '#CCFBF1', // Soft mint
+            pink: '#F9A8D4',
+            peach: '#FDBA74',
+            lavender: '#C4B5FD',
+            mint: '#5EEAD4',
         },
 
-        // Soft Gradients (darker versions for dark mode)
         gradients: {
-            primary: ['#A5B4FC', '#818CF8', '#6366F1'] as readonly [string, string, string],
-            secondary: ['#6EE7B7', '#34D399', '#10B981'] as readonly [string, string, string],
-            sunset: ['#FED7AA', '#FBCFE8', '#DDD6FE'] as readonly [string, string, string],
-            ocean: ['#CCFBF1', '#A7F3D0', '#C7D2FE'] as readonly [string, string, string],
+            primary: ['#2D3162', '#3B3F7A', '#4F46E5'] as readonly [string, string, string],
+            secondary: ['#1A3D30', '#1E5040', '#10B981'] as readonly [string, string, string],
+            sunset: ['#3D2E2E', '#3B2D4A', '#4F46E5'] as readonly [string, string, string],
+            ocean: ['#1A3D38', '#1E4040', '#2D3162'] as readonly [string, string, string],
         },
 
-        // Glassmorphism (darker)
         glass: {
-            light: 'rgba(255, 255, 255, 0.05)',
-            medium: 'rgba(255, 255, 255, 0.08)',
-            dark: 'rgba(255, 255, 255, 0.03)',
-            border: 'rgba(255, 255, 255, 0.1)',
+            light: 'rgba(255, 255, 255, 0.06)',
+            medium: 'rgba(255, 255, 255, 0.10)',
+            dark: 'rgba(255, 255, 255, 0.04)',
+            border: 'rgba(255, 255, 255, 0.12)',
         },
 
-        // Semantic Colors
         success: '#34D399',
-        error: '#F87171',
+        error: '#FB7185',
         warning: '#FBBF24',
         info: '#60A5FA',
 
-        // Dark Backgrounds
+        // Instagram/WhatsApp style dark — warm dark grays, not pure black
         background: {
-            primary: '#0F172A', // Dark slate
-            secondary: '#1E293B', // Lighter slate
-            tertiary: '#334155', // Medium slate
-            card: '#1E293B',
+            primary: '#121212',     // Main bg (like Instagram dark)
+            secondary: '#1E1E1E',   // Slightly elevated (like WhatsApp chat bg)
+            tertiary: '#2A2A2A',    // Cards/surfaces
+            card: '#1E1E1E',        // Card background
         },
 
-        // Text Colors (light for dark bg)
         text: {
-            primary: '#F8FAFC', // Very light
-            secondary: '#CBD5E1', // Light gray
-            disabled: '#64748B', // Medium gray
-            hint: '#475569', // Darker gray
+            primary: '#F5F5F5',     // Primary text — soft white
+            secondary: '#A0A0A0',   // Secondary — muted gray
+            disabled: '#666666',    // Disabled
+            hint: '#505050',        // Hints
         },
 
-        // Overlays
-        overlay: 'rgba(0, 0, 0, 0.7)',
-        backdrop: 'rgba(0, 0, 0, 0.5)',
+        overlay: 'rgba(0, 0, 0, 0.6)',
+        backdrop: 'rgba(0, 0, 0, 0.4)',
     },
 
     typography: {
@@ -122,21 +116,21 @@ export const darkTheme: Theme = {
         sm: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.4,
             shadowRadius: 4,
-            elevation: 2,
+            elevation: 3,
         },
         md: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.4,
+            shadowOpacity: 0.5,
             shadowRadius: 8,
-            elevation: 4,
+            elevation: 5,
         },
         lg: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.5,
+            shadowOpacity: 0.6,
             shadowRadius: 16,
             elevation: 8,
         },

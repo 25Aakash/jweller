@@ -8,9 +8,10 @@ import GradientButton from '../../components/GradientButton';
 import AnimatedNumber from '../../components/AnimatedNumber';
 import PriceTrend from '../../components/PriceTrend';
 import SkeletonCard from '../../components/SkeletonCard';
-import { theme } from '../../theme/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function GoldScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
   const [previousPrice, setPreviousPrice] = useState<number>(0);
   const [amount, setAmount] = useState('');
@@ -83,10 +84,11 @@ export default function GoldScreen({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
+      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.primary.light }]} />
+      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.secondary.light }]} />
 
       <ScrollView
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -155,19 +157,22 @@ export default function GoldScreen({ navigation }: any) {
               onChangeText={calculateGrams}
               keyboardType="numeric"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
               left={<TextInput.Icon icon="currency-inr" color={theme.colors.primary.main} />}
               outlineColor={theme.colors.primary.pastel}
               activeOutlineColor={theme.colors.primary.main}
+              textColor={theme.colors.text.primary}
               theme={{
                 colors: {
-                  background: '#FFFFFF',
+                  background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
                   text: theme.colors.text.primary,
+                  placeholder: theme.colors.text.secondary,
+                  onSurfaceVariant: theme.colors.text.secondary,
                 },
               }}
             />
 
-            <Text style={styles.orText}>OR</Text>
+            <Text style={[styles.orText, { color: theme.colors.text.disabled }]}>OR</Text>
 
             <TextInput
               label="Grams"
@@ -175,24 +180,27 @@ export default function GoldScreen({ navigation }: any) {
               onChangeText={calculateAmount}
               keyboardType="numeric"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
               left={<TextInput.Icon icon="weight-gram" color={theme.colors.primary.main} />}
               outlineColor={theme.colors.primary.pastel}
               activeOutlineColor={theme.colors.primary.main}
+              textColor={theme.colors.text.primary}
               theme={{
                 colors: {
-                  background: '#FFFFFF',
+                  background: isDark ? theme.colors.background.tertiary : '#FFFFFF',
                   text: theme.colors.text.primary,
+                  placeholder: theme.colors.text.secondary,
+                  onSurfaceVariant: theme.colors.text.secondary,
                 },
               }}
             />
 
             {amount && grams && (
-              <View style={styles.resultBox}>
-                <Text style={styles.resultText}>
+              <View style={[styles.resultBox, { backgroundColor: isDark ? theme.colors.background.tertiary : theme.colors.secondary.light }]}>
+                <Text style={[styles.resultText, { color: isDark ? theme.colors.secondary.main : theme.colors.secondary.dark }]}>
                   ₹{amount} = {grams} grams
                 </Text>
-                <Text style={styles.resultSubtext}>
+                <Text style={[styles.resultSubtext, { color: isDark ? theme.colors.text.secondary : theme.colors.secondary.dark }]}>
                   @ ₹{goldPrice?.final_price?.toFixed(2) || '0.00'}/gram
                 </Text>
               </View>
@@ -229,7 +237,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: theme.colors.primary.light,
     opacity: 0.2,
     top: -100,
     right: -100,
@@ -239,100 +246,88 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: theme.colors.secondary.light,
     opacity: 0.2,
     bottom: -50,
     left: -50,
   },
   skeletonContainer: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    padding: 24,
+    gap: 24,
   },
   content: {
-    padding: theme.spacing.lg,
+    padding: 24,
   },
   priceCard: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   priceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   priceLabel: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    fontWeight: '700',
   },
   priceSubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
   },
   priceAmount: {
     fontSize: 42,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   priceDetails: {
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   priceDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   priceDetailLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
   },
   priceDetailValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 14,
+    fontWeight: '500',
   },
   calculatorCard: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   calculatorTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
     textAlign: 'center',
   },
   input: {
-    marginBottom: theme.spacing.md,
-    backgroundColor: '#FFFFFF',
+    marginBottom: 16,
   },
   orText: {
     textAlign: 'center',
-    color: theme.colors.text.disabled,
-    marginVertical: theme.spacing.sm,
-    fontSize: theme.typography.fontSize.sm,
+    marginVertical: 8,
+    fontSize: 14,
   },
   resultBox: {
-    backgroundColor: theme.colors.secondary.light,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
     alignItems: 'center',
   },
   resultText: {
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.secondary.dark,
-    marginBottom: theme.spacing.xs,
-    fontSize: theme.typography.fontSize.md,
+    fontWeight: '700',
+    marginBottom: 4,
+    fontSize: 16,
   },
   resultSubtext: {
-    color: theme.colors.secondary.dark,
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: 14,
   },
   bookButton: {
-    marginTop: theme.spacing.sm,
+    marginTop: 8,
   },
   viewBookingsButton: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
   },
 });

@@ -98,6 +98,7 @@ export default function TransactionsScreen() {
       </View>
 
       <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

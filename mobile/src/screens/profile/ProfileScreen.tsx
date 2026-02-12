@@ -10,11 +10,10 @@ import {
   isBiometricEnabled,
   setBiometricEnabled,
 } from '../../utils/biometric';
-import { theme as lightTheme } from '../../theme/theme';
 
 export default function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuth();
-  const { theme, themeMode, setThemeMode } = useTheme();
+  const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState('');
@@ -87,7 +86,7 @@ export default function ProfileScreen({ navigation }: any) {
       <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.primary.light }]} />
       <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.secondary.light }]} />
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
         <View style={styles.content}>
           {/* Profile Header */}
           <GlassCard
@@ -131,7 +130,7 @@ export default function ProfileScreen({ navigation }: any) {
                   value={biometricEnabled}
                   onValueChange={handleBiometricToggle}
                   trackColor={{ false: theme.colors.text.disabled, true: theme.colors.primary.main }}
-                  thumbColor={biometricEnabled ? theme.colors.primary.light : '#f4f3f4'}
+                  thumbColor={biometricEnabled ? theme.colors.primary.light : isDark ? '#555' : '#f4f3f4'}
                 />
               </View>
             </GlassCard>
@@ -204,7 +203,7 @@ export default function ProfileScreen({ navigation }: any) {
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
                 trackColor={{ false: theme.colors.text.disabled, true: theme.colors.primary.main }}
-                thumbColor={notificationsEnabled ? theme.colors.primary.light : '#f4f3f4'}
+                thumbColor={notificationsEnabled ? theme.colors.primary.light : isDark ? '#555' : '#f4f3f4'}
               />
             </View>
           </GlassCard>
@@ -245,7 +244,7 @@ export default function ProfileScreen({ navigation }: any) {
             title="Logout"
             icon="🚪"
             onPress={handleLogout}
-            colors={['#FCA5A5', '#F87171', '#EF4444'] as const}
+            colors={isDark ? ['#5C2626', '#7F1D1D', '#991B1B'] as const : ['#FCA5A5', '#F87171', '#EF4444'] as const}
             style={styles.logoutButton}
           />
 
@@ -284,50 +283,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: lightTheme.spacing.lg,
+    padding: 24,
   },
   profileCard: {
-    marginBottom: lightTheme.spacing.lg,
+    marginBottom: 24,
   },
   profileContent: {
     alignItems: 'center',
-    paddingVertical: lightTheme.spacing.lg,
+    paddingVertical: 24,
   },
   profileEmoji: {
     fontSize: 64,
-    marginBottom: lightTheme.spacing.sm,
+    marginBottom: 8,
   },
   profileName: {
-    fontSize: lightTheme.typography.fontSize.xxl,
-    fontWeight: lightTheme.typography.fontWeight.bold,
-    color: lightTheme.colors.text.primary,
-    marginBottom: lightTheme.spacing.xs,
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   profilePhone: {
-    fontSize: lightTheme.typography.fontSize.md,
-    color: lightTheme.colors.text.secondary,
-    marginBottom: lightTheme.spacing.xs,
+    fontSize: 16,
+    marginBottom: 4,
   },
   profileLocation: {
-    fontSize: lightTheme.typography.fontSize.sm,
-    color: lightTheme.colors.text.secondary,
+    fontSize: 14,
   },
   settingsCard: {
-    marginBottom: lightTheme.spacing.lg,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: lightTheme.typography.fontSize.lg,
-    fontWeight: lightTheme.typography.fontWeight.bold,
-    marginBottom: lightTheme.spacing.md,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
   },
   themeOptions: {
     flexDirection: 'row',
-    gap: lightTheme.spacing.sm,
+    gap: 8,
   },
   themeOption: {
     flex: 1,
-    padding: lightTheme.spacing.md,
-    borderRadius: lightTheme.borderRadius.md,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 2,
     alignItems: 'center',
   },
@@ -336,61 +332,61 @@ const styles = StyleSheet.create({
   },
   themeIcon: {
     fontSize: 32,
-    marginBottom: lightTheme.spacing.xs,
+    marginBottom: 4,
   },
   themeText: {
-    fontSize: lightTheme.typography.fontSize.sm,
-    fontWeight: lightTheme.typography.fontWeight.semibold,
+    fontSize: 14,
+    fontWeight: '600',
   },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: lightTheme.spacing.sm,
+    paddingVertical: 8,
   },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: lightTheme.spacing.md,
+    gap: 16,
     flex: 1,
   },
   settingIcon: {
     fontSize: 24,
   },
   settingText: {
-    fontSize: lightTheme.typography.fontSize.md,
-    fontWeight: lightTheme.typography.fontWeight.medium,
+    fontSize: 16,
+    fontWeight: '500',
   },
   settingSubtext: {
-    fontSize: lightTheme.typography.fontSize.xs,
+    fontSize: 12,
     marginTop: 2,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: lightTheme.spacing.md,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    borderBottomColor: 'rgba(128, 128, 128, 0.15)',
   },
   actionIcon: {
     fontSize: 24,
-    marginRight: lightTheme.spacing.md,
+    marginRight: 16,
   },
   actionText: {
     flex: 1,
-    fontSize: lightTheme.typography.fontSize.md,
-    fontWeight: lightTheme.typography.fontWeight.medium,
+    fontSize: 16,
+    fontWeight: '500',
   },
   actionArrow: {
-    fontSize: lightTheme.typography.fontSize.lg,
+    fontSize: 18,
   },
   logoutButton: {
-    marginTop: lightTheme.spacing.md,
-    marginBottom: lightTheme.spacing.xl,
+    marginTop: 16,
+    marginBottom: 32,
   },
   version: {
     textAlign: 'center',
-    fontSize: lightTheme.typography.fontSize.xs,
-    marginBottom: lightTheme.spacing.xl,
+    fontSize: 12,
+    marginBottom: 32,
   },
 });

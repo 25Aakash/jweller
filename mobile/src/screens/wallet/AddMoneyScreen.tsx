@@ -48,7 +48,7 @@ export default function AddMoneyScreen({ navigation }: any) {
       <View style={styles.decorativeCircle1} />
       <View style={styles.decorativeCircle2} />
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.content}>
           {/* Amount Input Card */}
           <GlassCard

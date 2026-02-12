@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Searchbar } from 'react-native-paper';
 import { jewellerAPI } from '../../api/endpoints';
+import { useTheme } from '../../context/ThemeContext';
 
 interface Transaction {
   id: string;
@@ -13,6 +14,7 @@ interface Transaction {
 }
 
 export default function AllTransactionsScreen() {
+  const { theme, isDark } = useTheme();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -21,7 +23,7 @@ export default function AllTransactionsScreen() {
   const fetchTransactions = async () => {
     try {
       const data = await jewellerAPI.getAllTransactions();
-      setTransactions(data);
+      setTransactions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -42,61 +44,65 @@ export default function AllTransactionsScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SUCCESS':
-        return '#00C853';
+        return theme.colors.success;
       case 'PENDING':
-        return '#FF6F00';
+        return theme.colors.warning;
       case 'FAILED':
-        return '#D32F2F';
+        return theme.colors.error;
       default:
-        return '#666';
+        return theme.colors.text.secondary;
     }
   };
 
   const filteredTransactions = transactions?.filter(txn =>
-    txn.user_name.toLowerCase().includes(searchQuery.toLowerCase())
+    txn.user_name?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
       <Searchbar
         placeholder="Search by customer name..."
         onChangeText={setSearchQuery}
         value={searchQuery}
-        style={styles.searchbar}
+        style={[styles.searchbar, { backgroundColor: theme.colors.background.card }]}
+        inputStyle={{ color: theme.colors.text.primary }}
+        placeholderTextColor={theme.colors.text.disabled}
+        iconColor={theme.colors.text.secondary}
       />
 
       <FlatList
         data={filteredTransactions}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary.main} />
         }
         renderItem={({ item }) => (
-          <Card style={styles.card}>
+          <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }]}>
             <Card.Content>
               <View style={styles.cardHeader}>
-                <Text variant="titleMedium">{item.user_name}</Text>
+                <Text variant="titleMedium" style={{ color: theme.colors.text.primary }}>{item.user_name}</Text>
                 <Chip
                   style={{ backgroundColor: getStatusColor(item.status) }}
-                  textStyle={{ color: '#fff' }}
+                  textStyle={{ color: '#fff', fontSize: 12 }}
                 >
                   {item.status}
                 </Chip>
               </View>
-              <Text variant="bodyMedium" style={styles.amount}>
-                ₹{item.amount.toLocaleString('en-IN')}
+              <Text variant="bodyMedium" style={[styles.amount, { color: theme.colors.text.primary }]}>
+                ₹{(item.amount || 0).toLocaleString('en-IN')}
               </Text>
               <View style={styles.cardFooter}>
-                <Text variant="bodySmall">{item.type}</Text>
-                <Text variant="bodySmall">
+                <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>{item.type}</Text>
+                <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
                   {new Date(item.created_at).toLocaleDateString()}
                 </Text>
               </View>
@@ -105,7 +111,7 @@ export default function AllTransactionsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text>No transactions found</Text>
+            <Text style={{ color: theme.colors.text.secondary }}>No transactions found</Text>
           </View>
         }
       />
@@ -116,7 +122,6 @@ export default function AllTransactionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -125,9 +130,11 @@ const styles = StyleSheet.create({
   },
   searchbar: {
     margin: 10,
+    borderRadius: 10,
   },
   card: {
     margin: 10,
+    borderRadius: 12,
   },
   cardHeader: {
     flexDirection: 'row',

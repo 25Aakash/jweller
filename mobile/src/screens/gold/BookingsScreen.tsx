@@ -107,6 +107,7 @@ export default function BookingsScreen() {
       </View>
 
       <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

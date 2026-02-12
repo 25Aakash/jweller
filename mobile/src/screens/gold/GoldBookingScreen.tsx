@@ -118,6 +118,7 @@ export default function GoldBookingScreen({ navigation }: any) {
 
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import * as Updates from 'expo-updates';
@@ -143,13 +144,15 @@ export default function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <PaperProvider>
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
-      </PaperProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <PaperProvider>
+          <AuthProvider>
+            <AppNavigator />
+          </AuthProvider>
+        </PaperProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

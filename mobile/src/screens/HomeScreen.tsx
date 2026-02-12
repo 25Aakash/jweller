@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, Text } from 'react-native
 import { ActivityIndicator } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { walletAPI, goldAPI } from '../api/endpoints';
 import { WalletBalance, GoldPrice } from '../types';
 import GlassCard from '../components/GlassCard';
@@ -13,10 +14,10 @@ import QuickActionButton from '../components/QuickActionButton';
 import StatsCard from '../components/StatsCard';
 import PriceTrend from '../components/PriceTrend';
 import { getGreeting } from '../utils/greetings';
-import { theme } from '../theme/theme';
 
 export default function HomeScreen({ navigation }: any) {
   const { user, logout } = useAuth();
+  const { theme, isDark } = useTheme();
   const [wallet, setWallet] = useState<WalletBalance | null>(null);
   const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
   const [previousPrice, setPreviousPrice] = useState<number>(0);
@@ -85,12 +86,13 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
       {/* Soft decorative circles */}
-      <View style={styles.decorativeCircle1} />
-      <View style={styles.decorativeCircle2} />
-      <View style={styles.decorativeCircle3} />
+      <View style={[styles.decorativeCircle1, { backgroundColor: theme.colors.primary.light }]} />
+      <View style={[styles.decorativeCircle2, { backgroundColor: theme.colors.secondary.light }]} />
+      <View style={[styles.decorativeCircle3, { backgroundColor: theme.colors.accent.pink }]} />
 
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -102,9 +104,9 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.content}>
           {/* Personalized Header */}
           <View style={styles.header}>
-            <Text style={styles.greeting}>{greeting.emoji} {greeting.text}!</Text>
-            <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
-            <Text style={styles.lastUpdated}>Updated {formatLastUpdated()}</Text>
+            <Text style={[styles.greeting, { color: theme.colors.text.secondary }]}>{greeting.emoji} {greeting.text}!</Text>
+            <Text style={[styles.userName, { color: theme.colors.text.primary }]}>{user?.name || 'Guest'}</Text>
+            <Text style={[styles.lastUpdated, { color: theme.colors.text.disabled }]}>Updated {formatLastUpdated()}</Text>
           </View>
 
           {/* Quick Stats - Horizontal Scroll */}
@@ -148,7 +150,7 @@ export default function HomeScreen({ navigation }: any) {
                     title="Add Money"
                     icon="+"
                     onPress={() => navigation.navigate('Wallet')}
-                    colors={['#FFFFFF', '#F0F0F0'] as const}
+                    colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
                     style={styles.quickAction}
                   />
                 </View>
@@ -209,7 +211,7 @@ export default function HomeScreen({ navigation }: any) {
                   title="Buy Gold Now"
                   icon="🛒"
                   onPress={() => navigation.navigate('GoldBooking')}
-                  colors={['#FFFFFF', '#F0F0F0'] as const}
+                  colors={isDark ? [theme.colors.background.tertiary, theme.colors.background.secondary] as const : ['#FFFFFF', '#F0F0F0'] as const}
                   style={styles.buyButton}
                 />
               </View>
@@ -218,20 +220,20 @@ export default function HomeScreen({ navigation }: any) {
 
           {/* User Info Card */}
           <GlassCard intensity={90} style={styles.infoCard}>
-            <Text style={styles.infoTitle}>Account Information</Text>
+            <Text style={[styles.infoTitle, { color: theme.colors.text.primary }]}>Account Information</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>📱 Phone:</Text>
-              <Text style={styles.infoValue}>{user?.phone_number}</Text>
+              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>📱 Phone:</Text>
+              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>{user?.phone_number}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>📍 Location:</Text>
-              <Text style={styles.infoValue}>
+              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>📍 Location:</Text>
+              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>
                 {user?.city && user?.state ? `${user.city}, ${user.state}` : 'Not available'}
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>👤 Role:</Text>
-              <Text style={styles.infoValue}>{user?.role}</Text>
+              <Text style={[styles.infoLabel, { color: theme.colors.text.secondary }]}>👤 Role:</Text>
+              <Text style={[styles.infoValue, { color: theme.colors.text.primary }]}>{user?.role}</Text>
             </View>
           </GlassCard>
 
@@ -240,7 +242,7 @@ export default function HomeScreen({ navigation }: any) {
             title="Logout"
             icon="🚪"
             onPress={handleLogout}
-            colors={['#FCA5A5', '#F87171', '#EF4444'] as const}
+            colors={isDark ? ['#5C2626', '#7F1D1D', '#991B1B'] as const : ['#FCA5A5', '#F87171', '#EF4444'] as const}
             style={styles.logoutButton}
           />
         </View>
@@ -258,7 +260,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: theme.colors.primary.light,
     opacity: 0.2,
     top: 100,
     right: -100,
@@ -268,7 +269,6 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: theme.colors.secondary.light,
     opacity: 0.2,
     top: 400,
     left: -80,
@@ -278,7 +278,6 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: theme.colors.accent.pink,
     opacity: 0.2,
     bottom: 200,
     right: -60,
@@ -289,146 +288,132 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    padding: theme.spacing.lg,
+    padding: 24,
   },
   skeletonContainer: {
-    gap: theme.spacing.lg,
+    gap: 24,
   },
   content: {
-    padding: theme.spacing.lg,
+    padding: 24,
   },
   header: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   greeting: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 18,
+    marginBottom: 4,
   },
   userName: {
-    fontSize: theme.typography.fontSize.xxxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   lastUpdated: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.disabled,
+    fontSize: 14,
   },
   statsContainer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   walletCard: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   walletContent: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 16,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   walletLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 16,
+    fontWeight: '500',
   },
   quickAction: {
     marginLeft: 'auto',
   },
   walletAmount: {
     fontSize: 48,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontWeight: '700',
+    marginBottom: 4,
     textAlign: 'center',
   },
   walletSubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
     textAlign: 'center',
   },
   goldCard: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   goldContent: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 16,
   },
   goldHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: 4,
   },
   goldEmoji: {
     fontSize: 24,
   },
   goldLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 16,
+    fontWeight: '700',
   },
   goldPrice: {
     fontSize: 42,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   goldUnit: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   goldDetails: {
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
+    gap: 8,
+    marginBottom: 16,
   },
   goldDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: 4,
   },
   goldDetailLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
   },
   goldDetailValue: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 14,
+    fontWeight: '500',
   },
   buyButton: {
-    marginTop: theme.spacing.sm,
+    marginTop: 8,
   },
   infoCard: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   infoTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.primary.light,
+    borderBottomColor: 'rgba(129, 140, 248, 0.2)',
   },
   infoLabel: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.secondary,
+    fontSize: 16,
   },
   infoValue: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 16,
+    fontWeight: '500',
   },
   logoutButton: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
   },
 });

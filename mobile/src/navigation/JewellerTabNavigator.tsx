@@ -6,15 +6,32 @@ import CustomersScreen from '../screens/jeweller/CustomersScreen';
 import AllTransactionsScreen from '../screens/jeweller/AllTransactionsScreen';
 import AllBookingsScreen from '../screens/jeweller/AllBookingsScreen';
 import JewellerSettingsScreen from '../screens/jeweller/JewellerSettingsScreen';
+import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
 export default function JewellerTabNavigator() {
+  const { theme, isDark } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#6200ee',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: theme.colors.primary.main,
+        tabBarInactiveTintColor: theme.colors.text.disabled,
+        tabBarStyle: {
+          backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : '#E0E0E0',
+          borderTopWidth: 0.5,
+        },
+        headerStyle: {
+          backgroundColor: isDark ? '#1E1E1E' : theme.colors.primary.dark,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: isDark ? theme.colors.text.primary : '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
         headerShown: true,
       }}
     >

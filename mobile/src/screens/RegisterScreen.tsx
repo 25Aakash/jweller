@@ -290,6 +290,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: theme.spacing.lg,
+    paddingBottom: 40,
   },
   content: {
     flex: 1,
