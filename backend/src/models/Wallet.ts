@@ -5,6 +5,7 @@ export interface IWallet extends Document {
     jeweller_id: string;
     balance: number;
     gold_grams: number;
+    silver_grams: number;
     created_at: Date;
     updated_at: Date;
 }
@@ -15,6 +16,7 @@ const WalletSchema = new Schema<IWallet>(
         jeweller_id: { type: String, required: true, index: true },
         balance: { type: Number, default: 0, min: 0 },
         gold_grams: { type: Number, default: 0, min: 0 },
+        silver_grams: { type: Number, default: 0, min: 0 },
     },
     {
         timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

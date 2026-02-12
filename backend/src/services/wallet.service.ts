@@ -83,7 +83,8 @@ export const deductMoneyFromWallet = async (
     userId: string,
     jewellerId: string,
     amount: number,
-    bookingId: string
+    bookingId: string,
+    transactionType: 'GOLD_BOOKING' | 'SILVER_BOOKING' = 'GOLD_BOOKING'
 ): Promise<any> => {
     const session = await mongoose.startSession();
     try {
@@ -113,7 +114,7 @@ export const deductMoneyFromWallet = async (
                     jeweller_id: jewellerId,
                     booking_id: bookingId,
                     amount,
-                    type: 'GOLD_BOOKING',
+                    type: transactionType,
                     status: 'SUCCESS',
                 },
             ],
@@ -159,6 +160,37 @@ export const addGoldToWallet = async (
         return wallet;
     } catch (error) {
         logger.error('Error in addGoldToWallet:', error);
+        throw error;
+    }
+};
+
+/**
+ * Add silver to wallet
+ */
+export const addSilverToWallet = async (
+    userId: string,
+    jewellerId: string,
+    silverGrams: number
+): Promise<any> => {
+    try {
+        if (silverGrams <= 0) {
+            throw new ValidationError('Silver grams must be greater than 0');
+        }
+
+        const wallet = await Wallet.findOneAndUpdate(
+            { user_id: userId, jeweller_id: jewellerId },
+            { $inc: { silver_grams: silverGrams } },
+            { new: true }
+        );
+
+        if (!wallet) {
+            throw new NotFoundError('Wallet not found');
+        }
+
+        logger.info(`Added ${silverGrams}g silver to wallet for user ${userId}`);
+        return wallet;
+    } catch (error) {
+        logger.error('Error in addSilverToWallet:', error);
         throw error;
     }
 };

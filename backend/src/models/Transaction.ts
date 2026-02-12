@@ -6,7 +6,7 @@ export interface ITransaction extends Document {
     transaction_ref?: string;
     booking_id?: mongoose.Types.ObjectId;
     amount: number;
-    type: 'WALLET_CREDIT' | 'GOLD_BOOKING' | 'REFUND';
+    type: 'WALLET_CREDIT' | 'GOLD_BOOKING' | 'SILVER_BOOKING' | 'REFUND';
     status: 'SUCCESS' | 'FAILED' | 'PENDING';
     payment_gateway_response?: any;
     created_at: Date;
@@ -19,7 +19,7 @@ const TransactionSchema = new Schema<ITransaction>(
         transaction_ref: { type: String },
         booking_id: { type: Schema.Types.ObjectId, ref: 'GoldBooking' },
         amount: { type: Number, required: true },
-        type: { type: String, enum: ['WALLET_CREDIT', 'GOLD_BOOKING', 'REFUND'], required: true },
+        type: { type: String, enum: ['WALLET_CREDIT', 'GOLD_BOOKING', 'SILVER_BOOKING', 'REFUND'], required: true },
         status: { type: String, enum: ['SUCCESS', 'FAILED', 'PENDING'], default: 'PENDING' },
         payment_gateway_response: { type: Schema.Types.Mixed },
     },

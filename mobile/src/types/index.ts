@@ -38,3 +38,20 @@ export interface GoldBooking {
     status: string;
     created_at: string;
 }
+
+export interface SilverPrice {
+    base_mcx_price: number;
+    margin_percent: number;
+    margin_fixed: number;
+    final_price: number;
+    effective_date: string;
+}
+
+export interface SilverBooking {
+    id: string;
+    amount: number;
+    grams: number;
+    locked_price: number;
+    status: string;
+    created_at: string;
+}

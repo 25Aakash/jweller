@@ -17,6 +17,8 @@ import AddMoneyScreen from './src/screens/wallet/AddMoneyScreen';
 import TransactionsScreen from './src/screens/wallet/TransactionsScreen';
 import BookGoldScreen from './src/screens/gold/BookGoldScreen';
 import BookingsScreen from './src/screens/gold/BookingsScreen';
+import SilverBookingScreen from './src/screens/silver/SilverBookingScreen';
+import SilverBookingsScreen from './src/screens/silver/SilverBookingsScreen';
 import GoldPriceScreen from './src/screens/jeweller/GoldPriceScreen';
 import CustomerDetailsScreen from './src/screens/jeweller/CustomerDetailsScreen';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
@@ -77,6 +79,16 @@ function AppNavigator() {
                   name="Bookings"
                   component={BookingsScreen}
                   options={{ title: 'My Bookings' }}
+                />
+                <Stack.Screen
+                  name="SilverBooking"
+                  component={SilverBookingScreen}
+                  options={{ title: 'Book Silver' }}
+                />
+                <Stack.Screen
+                  name="SilverBookings"
+                  component={SilverBookingsScreen}
+                  options={{ title: 'My Silver Bookings' }}
                 />
               </>
             )}

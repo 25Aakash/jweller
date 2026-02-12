@@ -129,6 +129,36 @@ export const goldAPI = {
     },
 };
 
+export const silverAPI = {
+    getCurrentPrice: async () => {
+        const response = await apiClient.get('/silver/current-price');
+        return response.data.price;
+    },
+
+    getLivePrice: async () => {
+        const response = await apiClient.get('/silver/live-price');
+        return response.data.price;
+    },
+
+    calculateGrams: async (amount: number) => {
+        const response = await apiClient.post('/silver/calculate-grams', { amount });
+        return response.data;
+    },
+
+    createBooking: async (amount: number, grams: number) => {
+        const response = await apiClient.post('/silver/bookings', {
+            amount,
+            grams,
+        });
+        return response.data;
+    },
+
+    getBookings: async () => {
+        const response = await apiClient.get('/silver/bookings');
+        return response.data;
+    },
+};
+
 export const jewellerAPI = {
     getDashboard: async () => {
         const response = await apiClient.get('/jeweller/dashboard');

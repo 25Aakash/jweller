@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import GoldScreen from '../screens/gold/GoldScreen';
+import SilverScreen from '../screens/silver/SilverScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import { useTheme } from '../context/ThemeContext';
 
@@ -58,6 +59,16 @@ export default function TabNavigator() {
           title: 'Gold Booking',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="gold" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Silver"
+        component={SilverScreen}
+        options={{
+          title: 'Silver Booking',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="circle-multiple" size={size} color={color} />
           ),
         }}
       />
