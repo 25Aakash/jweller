@@ -1,9 +1,9 @@
-import { User, Wallet, Transaction, GoldBooking, GoldPriceConfig, Jeweller } from '../models';
+import { User, Wallet, Transaction, GoldBooking, GoldPriceConfig, Jeweller, SilverBooking } from '../models';
 import logger from '../utils/logger';
 
 export const getDashboardStats = async (jewellerId: string) => {
     try {
-        const [totalCustomers, totalRevenue, totalGoldSold, activeBookings, todayTransactions] =
+        const [totalCustomers, totalRevenue, totalGoldSold, activeBookings, todayTransactions, totalSilverSold, activeSilverBookings] =
             await Promise.all([
                 User.countDocuments({ jeweller_id: jewellerId, role: 'CUSTOMER' }),
                 Transaction.aggregate([
@@ -22,6 +22,11 @@ export const getDashboardStats = async (jewellerId: string) => {
                         $lt: new Date(new Date().setHours(23, 59, 59, 999)),
                     },
                 }),
+                SilverBooking.aggregate([
+                    { $match: { jeweller_id: jewellerId, status: 'ACTIVE' } },
+                    { $group: { _id: null, total: { $sum: '$silver_grams' } } },
+                ]),
+                SilverBooking.countDocuments({ jeweller_id: jewellerId, status: 'ACTIVE' }),
             ]);
 
         return {
@@ -30,6 +35,8 @@ export const getDashboardStats = async (jewellerId: string) => {
             totalGoldSold: totalGoldSold[0]?.total || 0,
             activeBookings,
             todayTransactions,
+            totalSilverSold: totalSilverSold[0]?.total || 0,
+            activeSilverBookings,
         };
     } catch (error) {
         logger.error('Error in getDashboardStats:', error);

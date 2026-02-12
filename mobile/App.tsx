@@ -21,6 +21,7 @@ import BookingsScreen from './src/screens/gold/BookingsScreen';
 import SilverBookingScreen from './src/screens/silver/SilverBookingScreen';
 import SilverBookingsScreen from './src/screens/silver/SilverBookingsScreen';
 import GoldPriceScreen from './src/screens/jeweller/GoldPriceScreen';
+import SilverPriceScreen from './src/screens/jeweller/SilverPriceScreen';
 import CustomerDetailsScreen from './src/screens/jeweller/CustomerDetailsScreen';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
@@ -104,6 +105,11 @@ function AppNavigator() {
                   name="GoldPrice"
                   component={GoldPriceScreen}
                   options={{ title: 'Update Gold Price' }}
+                />
+                <Stack.Screen
+                  name="SilverPrice"
+                  component={SilverPriceScreen}
+                  options={{ title: 'Update Silver Price' }}
                 />
                 <Stack.Screen
                   name="CustomerDetails"

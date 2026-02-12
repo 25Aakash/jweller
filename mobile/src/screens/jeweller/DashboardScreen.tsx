@@ -11,6 +11,8 @@ interface DashboardStats {
   totalGoldSold: number;
   activeBookings: number;
   todayTransactions: number;
+  totalSilverSold: number;
+  activeSilverBookings: number;
 }
 
 export default function DashboardScreen({ navigation }: any) {
@@ -61,7 +63,7 @@ export default function DashboardScreen({ navigation }: any) {
           💎 Business Dashboard
         </Text>
         <Text variant="bodyMedium" style={[styles.subtitle, { color: isDark ? theme.colors.text.secondary : 'rgba(255,255,255,0.9)' }]}>
-          Overview of your gold business
+          Overview of your business
         </Text>
       </View>
 
@@ -97,7 +99,19 @@ export default function DashboardScreen({ navigation }: any) {
               {(stats?.totalGoldSold || 0).toFixed(2)}g
             </Text>
             <Text variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
-              Gold Sold
+              Gold Booked
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="circle-multiple" size={32} color="#C0C0C0" />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              {(stats?.totalSilverSold || 0).toFixed(2)}g
+            </Text>
+            <Text variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+              Silver Booked
             </Text>
           </Card.Content>
         </Card>
@@ -109,7 +123,19 @@ export default function DashboardScreen({ navigation }: any) {
               {String(stats?.activeBookings || 0)}
             </Text>
             <Text variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
-              Active Bookings
+              Gold Bookings
+            </Text>
+          </Card.Content>
+        </Card>
+
+        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content>
+            <MaterialCommunityIcons name="bookmark-multiple" size={32} color="#9E9E9E" />
+            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
+              {String(stats?.activeSilverBookings || 0)}
+            </Text>
+            <Text variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+              Silver Bookings
             </Text>
           </Card.Content>
         </Card>
@@ -129,6 +155,17 @@ export default function DashboardScreen({ navigation }: any) {
           onPress={() => navigation.navigate('GoldPrice')}
         >
           Update Gold Price
+        </Button>
+
+        <Button
+          mode="contained"
+          icon="circle-multiple"
+          style={styles.actionButton}
+          buttonColor="#C0C0C0"
+          textColor="#000"
+          onPress={() => navigation.navigate('SilverPrice')}
+        >
+          Update Silver Price
         </Button>
 
         <Button

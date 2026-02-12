@@ -193,4 +193,13 @@ export const jewellerAPI = {
         });
         return response.data;
     },
+
+    updateSilverPrice: async (baseMcxPrice: number, marginPercent: number, marginFixed: number) => {
+        const response = await apiClient.post('/silver/admin/set-price', {
+            base_mcx_price: baseMcxPrice,
+            margin_percent: marginPercent,
+            margin_fixed: marginFixed,
+        });
+        return response.data;
+    },
 };

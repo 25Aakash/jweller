@@ -160,7 +160,7 @@ export default function HomeScreen({ navigation }: any) {
           style={styles.actionButton}
           buttonColor="#FFD700"
           textColor="#000"
-          onPress={() => navigation.navigate('GoldBooking')}
+          onPress={() => navigation.navigate('Gold')}
         >
           Buy Gold Now
         </Button>
@@ -171,7 +171,7 @@ export default function HomeScreen({ navigation }: any) {
           style={styles.actionButton}
           buttonColor="#C0C0C0"
           textColor="#000"
-          onPress={() => navigation.navigate('SilverBooking')}
+          onPress={() => navigation.navigate('Silver')}
         >
           Buy Silver Now
         </Button>
