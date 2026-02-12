@@ -9,7 +9,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import PhoneInputScreen from './src/screens/PhoneInputScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
-import JewellerLoginScreen from './src/screens/jeweller/JewellerLoginScreen';
+// JewellerLoginScreen removed — unified login via LoginScreen
 import TabNavigator from './src/navigation/TabNavigator';
 import JewellerTabNavigator from './src/navigation/JewellerTabNavigator';
 import AddMoneyScreen from './src/screens/wallet/AddMoneyScreen';
@@ -106,11 +106,7 @@ function AppNavigator() {
               component={RegisterScreen}
               options={{ title: 'Register' }}
             />
-            <Stack.Screen
-              name="JewellerLogin"
-              component={JewellerLoginScreen}
-              options={{ title: 'Jeweller Login' }}
-            />
+
             <Stack.Screen
               name="PhoneInput"
               component={PhoneInputScreen}

@@ -153,7 +153,7 @@ export const registerCustomer = async (
 };
 
 /**
- * Customer login with password
+ * Unified login with phone + password (works for both Customer and Admin/Jeweller)
  */
 export const loginCustomerWithPassword = async (
     phoneNumber: string,
@@ -163,10 +163,10 @@ export const loginCustomerWithPassword = async (
     try {
         const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
+        // Find user by phone number regardless of role
         const userData = await User.findOne({
             phone_number: normalizedPhone,
             jeweller_id: jewellerId,
-            role: 'CUSTOMER',
         });
 
         if (!userData) {
@@ -203,7 +203,7 @@ export const loginCustomerWithPassword = async (
             expires_at: expiresAt,
         });
 
-        logger.info(`Customer logged in with password: ${userData._id}`);
+        logger.info(`User logged in with password: ${userData._id} (role: ${userData.role})`);
 
         return {
             accessToken,

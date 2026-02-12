@@ -162,13 +162,7 @@ export default function LoginScreen({ navigation }: Props) {
             </View>
           </GlassCard>
 
-          {/* Jeweller Login */}
-          <GradientButton
-            title="Jeweller Login"
-            onPress={() => navigation.navigate('JewellerLogin')}
-            colors={theme.colors.gradients.sunset}
-            style={styles.jewellerButton}
-          />
+
 
           {/* Check for Updates */}
           <TouchableOpacity
@@ -287,9 +281,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.md,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  jewellerButton: {
-    marginTop: theme.spacing.sm,
-  },
+
   updateButton: {
     marginTop: theme.spacing.lg,
     alignItems: 'center',

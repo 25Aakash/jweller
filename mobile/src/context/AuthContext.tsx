@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (phoneNumber: string, otpCode: string, name?: string) => Promise<void>;
   registerUser: (phoneNumber: string, otpCode: string, name: string, password: string, state: string, city: string) => Promise<void>;
   loginWithPassword: (phoneNumber: string, password: string) => Promise<void>;
-  loginJeweller: (email: string, password: string) => Promise<void>;
+
   logout: () => Promise<void>;
   sendOTP: (phoneNumber: string) => Promise<void>;
 }
@@ -94,22 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginJeweller = async (email: string, password: string) => {
-    try {
-      const response = await authAPI.loginJeweller(email, password);
-      
-      // Save tokens and user data
-      await AsyncStorage.multiSet([
-        ['accessToken', response.accessToken],
-        ['refreshToken', response.refreshToken],
-        ['user', JSON.stringify(response.user)],
-      ]);
 
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
-  };
 
   const logout = async () => {
     try {
@@ -134,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         registerUser,
         loginWithPassword,
-        loginJeweller,
         logout,
         sendOTP,
       }}
