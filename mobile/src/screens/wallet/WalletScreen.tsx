@@ -33,8 +33,9 @@ export default function WalletScreen({ navigation }: any) {
         walletAPI.getBalance(),
         walletAPI.getTransactions(),
       ]);
-      setBalance(balanceData.balance);
-      setTransactions(Array.isArray(transactionsData) ? transactionsData : transactionsData?.transactions || []);
+      setBalance(balanceData?.wallet?.balance ?? balanceData?.balance ?? 0);
+      const txns = transactionsData?.transactions || transactionsData || [];
+      setTransactions(Array.isArray(txns) ? txns : []);
     } catch (error) {
       console.error('Error loading wallet data:', error);
     } finally {
