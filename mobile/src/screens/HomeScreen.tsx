@@ -98,30 +98,46 @@ export default function HomeScreen({ navigation }: any) {
         </Text>
       </View>
 
-      {/* Wallet Balance */}
-      <View style={styles.walletSection}>
-        <Card style={[styles.walletCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-          <Card.Content style={styles.walletContent}>
-            <View style={[styles.walletIconContainer, { backgroundColor: isDark ? 'rgba(212,168,67,0.12)' : 'rgba(184,134,11,0.08)' }]}>
-              <MaterialCommunityIcons name="wallet" size={28} color={theme.colors.primary.main} />
-            </View>
-            <View style={styles.walletInfo}>
-              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-                Wallet Balance
+      {/* My Holdings */}
+      <View style={styles.holdingsSection}>
+        <Text variant="titleMedium" style={[styles.holdingsSectionTitle, { color: theme.colors.text.secondary }]}>
+          My Holdings
+        </Text>
+        <View style={styles.holdingsRow}>
+          <Card style={[styles.holdingCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.holdingCardContent}>
+              <View style={[styles.holdingIconBg, { backgroundColor: 'rgba(255,215,0,0.12)' }]}>
+                <MaterialCommunityIcons name="gold" size={24} color="#FFD700" />
+              </View>
+              <Text variant="titleLarge" style={[styles.holdingGrams, { color: theme.colors.text.primary }]}>
+                {(wallet?.wallet?.gold_grams ?? wallet?.gold_grams ?? 0).toFixed(3)}g
               </Text>
-              <Text variant="headlineMedium" style={[styles.walletValue, { color: theme.colors.text.primary }]}>
-                ₹{wallet?.balance?.toFixed(2) || '0.00'}
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Gold
               </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.addMoneyBtn, { backgroundColor: theme.colors.primary.main }]}
-              onPress={() => navigation.navigate('AddMoney')}
-            >
-              <MaterialCommunityIcons name="plus" size={18} color="#fff" />
-              <Text style={styles.addMoneyText}>Add</Text>
-            </TouchableOpacity>
-          </Card.Content>
-        </Card>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.disabled, marginTop: 2 }}>
+                ≈ ₹{((wallet?.wallet?.gold_grams ?? wallet?.gold_grams ?? 0) * (goldPrice?.final_price || 0)).toFixed(0)}
+              </Text>
+            </Card.Content>
+          </Card>
+
+          <Card style={[styles.holdingCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.holdingCardContent}>
+              <View style={[styles.holdingIconBg, { backgroundColor: 'rgba(192,192,192,0.15)' }]}>
+                <MaterialCommunityIcons name="circle-multiple" size={24} color="#C0C0C0" />
+              </View>
+              <Text variant="titleLarge" style={[styles.holdingGrams, { color: theme.colors.text.primary }]}>
+                {(wallet?.wallet?.silver_grams ?? wallet?.silver_grams ?? 0).toFixed(3)}g
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Silver
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.disabled, marginTop: 2 }}>
+                ≈ ₹{((wallet?.wallet?.silver_grams ?? wallet?.silver_grams ?? 0) * (silverPrice?.final_price || 0)).toFixed(0)}
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
       </View>
 
       {/* Price Grid - 2x2 */}
@@ -324,46 +340,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginVertical: 4,
   },
-  walletSection: {
+  holdingsSection: {
     paddingHorizontal: 16,
     marginTop: 10,
   },
-  walletCard: {
-    borderRadius: 16,
-    elevation: 2,
+  holdingsSectionTitle: {
+    fontWeight: '600',
+    marginBottom: 10,
+    marginLeft: 2,
   },
-  walletContent: {
+  holdingsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
+    justifyContent: 'space-between',
   },
-  walletIconContainer: {
-    width: 48,
-    height: 48,
+  holdingCard: {
+    width: '48%',
     borderRadius: 14,
+    elevation: 1,
+  },
+  holdingCardContent: {
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  holdingIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  walletInfo: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  walletValue: {
+  holdingGrams: {
     fontWeight: 'bold',
-    marginTop: 2,
-  },
-  addMoneyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 4,
-  },
-  addMoneyText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 13,
   },
   priceSection: {
     paddingHorizontal: 16,

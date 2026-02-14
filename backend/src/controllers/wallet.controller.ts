@@ -21,6 +21,7 @@ export const getWalletBalance = async (
             wallet: {
                 balance: wallet.balance,
                 gold_grams: wallet.gold_grams,
+                silver_grams: wallet.silver_grams,
                 updated_at: wallet.updated_at,
             },
         });

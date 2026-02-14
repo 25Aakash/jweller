@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Platform, StatusBar } from 'react-native';
 import { Text, Card, Button, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { walletAPI } from '../../api/endpoints';
+import { walletAPI, goldAPI, silverAPI } from '../../api/endpoints';
 import { useTheme } from '../../context/ThemeContext';
+import { GoldPrice, SilverPrice } from '../../types';
 
 interface Transaction {
   id: string;
@@ -16,6 +17,10 @@ interface Transaction {
 export default function WalletScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
   const [balance, setBalance] = useState(0);
+  const [goldGrams, setGoldGrams] = useState(0);
+  const [silverGrams, setSilverGrams] = useState(0);
+  const [goldPrice, setGoldPrice] = useState<GoldPrice | null>(null);
+  const [silverPrice, setSilverPrice] = useState<SilverPrice | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,11 +31,17 @@ export default function WalletScreen({ navigation }: any) {
 
   const loadData = async () => {
     try {
-      const [balanceData, transactionsData] = await Promise.all([
+      const [balanceData, transactionsData, goldData, silverData] = await Promise.all([
         walletAPI.getBalance(),
         walletAPI.getTransactions(),
+        goldAPI.getCurrentPrice(),
+        silverAPI.getCurrentPrice(),
       ]);
       setBalance(balanceData?.wallet?.balance ?? balanceData?.balance ?? 0);
+      setGoldGrams(balanceData?.wallet?.gold_grams ?? balanceData?.gold_grams ?? 0);
+      setSilverGrams(balanceData?.wallet?.silver_grams ?? balanceData?.silver_grams ?? 0);
+      setGoldPrice(goldData);
+      setSilverPrice(silverData);
       const txns = transactionsData?.transactions || transactionsData || [];
       setTransactions(Array.isArray(txns) ? txns : []);
     } catch (error) {
@@ -51,6 +62,7 @@ export default function WalletScreen({ navigation }: any) {
       case 'credit': case 'deposit': return 'arrow-down-circle';
       case 'debit': case 'withdrawal': return 'arrow-up-circle';
       case 'gold_purchase': return 'gold';
+      case 'silver_purchase': return 'circle-multiple';
       default: return 'credit-card';
     }
   };
@@ -62,6 +74,9 @@ export default function WalletScreen({ navigation }: any) {
       default: return theme.colors.text.secondary;
     }
   };
+
+  const goldValue = goldGrams * (goldPrice?.final_price || 0);
+  const silverValue = silverGrams * (silverPrice?.final_price || 0);
 
   if (loading) {
     return (
@@ -85,39 +100,86 @@ export default function WalletScreen({ navigation }: any) {
           💰 My Wallet
         </Text>
         <Text variant="bodyMedium" style={{ color: isDark ? theme.colors.text.secondary : 'rgba(255,255,255,0.9)' }}>
-          Manage your funds
+          Your gold & silver holdings
         </Text>
       </View>
 
-      {/* Balance Card */}
+      {/* Gold Holdings Card */}
+      <Card style={[styles.holdingCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content style={styles.holdingContent}>
+          <View style={styles.holdingLeft}>
+            <View style={[styles.holdingIconBg, { backgroundColor: 'rgba(255,215,0,0.12)' }]}>
+              <MaterialCommunityIcons name="gold" size={28} color="#FFD700" />
+            </View>
+            <View style={styles.holdingInfo}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                Gold Holdings
+              </Text>
+              <Text variant="headlineSmall" style={[styles.holdingGrams, { color: theme.colors.text.primary }]}>
+                {goldGrams.toFixed(3)} g
+              </Text>
+            </View>
+          </View>
+          <View style={styles.holdingRight}>
+            <Text variant="titleMedium" style={{ color: theme.colors.text.primary, fontWeight: 'bold' }}>
+              ₹{goldValue.toFixed(0)}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>
+              @ ₹{goldPrice?.final_price?.toFixed(0) || '0'}/g
+            </Text>
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Silver Holdings Card */}
+      <Card style={[styles.holdingCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+        <Card.Content style={styles.holdingContent}>
+          <View style={styles.holdingLeft}>
+            <View style={[styles.holdingIconBg, { backgroundColor: 'rgba(192,192,192,0.15)' }]}>
+              <MaterialCommunityIcons name="circle-multiple" size={28} color="#C0C0C0" />
+            </View>
+            <View style={styles.holdingInfo}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                Silver Holdings
+              </Text>
+              <Text variant="headlineSmall" style={[styles.holdingGrams, { color: theme.colors.text.primary }]}>
+                {silverGrams.toFixed(3)} g
+              </Text>
+            </View>
+          </View>
+          <View style={styles.holdingRight}>
+            <Text variant="titleMedium" style={{ color: theme.colors.text.primary, fontWeight: 'bold' }}>
+              ₹{silverValue.toFixed(0)}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.text.disabled }}>
+              @ ₹{silverPrice?.final_price?.toFixed(0) || '0'}/g
+            </Text>
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Wallet Balance */}
       <Card style={[styles.balanceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
         <Card.Content style={styles.balanceContent}>
-          <MaterialCommunityIcons name="wallet" size={40} color={theme.colors.primary.main} />
-          <Text variant="bodyLarge" style={{ color: theme.colors.text.secondary, marginTop: 8 }}>
-            Total Balance
-          </Text>
-          <Text variant="displaySmall" style={[styles.balanceAmount, { color: theme.colors.text.primary }]}>
-            ₹{balance.toFixed(2)}
-          </Text>
-          <View style={styles.actionRow}>
+          <View style={styles.balanceRow}>
+            <View>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                Cash Balance
+              </Text>
+              <Text variant="headlineSmall" style={{ color: theme.colors.text.primary, fontWeight: 'bold' }}>
+                ₹{balance.toFixed(2)}
+              </Text>
+            </View>
             <Button
               mode="contained"
               icon="plus"
-              style={styles.actionButton}
+              compact
+              style={styles.addBtn}
               buttonColor={theme.colors.primary.main}
               textColor="#fff"
               onPress={() => navigation.navigate('AddMoney')}
             >
               Add Money
-            </Button>
-            <Button
-              mode="outlined"
-              icon="minus"
-              style={[styles.actionButton, { borderColor: theme.colors.primary.main }]}
-              textColor={theme.colors.primary.main}
-              onPress={() => navigation.navigate('Withdraw')}
-            >
-              Withdraw
             </Button>
           </View>
         </Card.Content>
@@ -139,16 +201,6 @@ export default function WalletScreen({ navigation }: any) {
               <Text variant="bodyMedium" style={{ color: theme.colors.text.disabled, textAlign: 'center', marginTop: 4 }}>
                 Your transaction history will appear here
               </Text>
-              <Button
-                mode="contained"
-                icon="plus"
-                style={{ marginTop: 16, borderRadius: 10 }}
-                buttonColor={theme.colors.primary.main}
-                textColor="#fff"
-                onPress={() => navigation.navigate('AddMoney')}
-              >
-                Add Money
-              </Button>
             </Card.Content>
           </Card>
         ) : (
@@ -210,38 +262,65 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: 'bold',
   },
-  balanceCard: {
-    margin: 10,
-    borderRadius: 12,
+  holdingCard: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    borderRadius: 14,
   },
   darkCardBorder: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  balanceContent: {
-    alignItems: 'center',
-    paddingVertical: 20,
+  holdingContent: {
+    paddingVertical: 4,
   },
-  balanceAmount: {
-    fontWeight: 'bold',
-    marginVertical: 8,
-  },
-  actionRow: {
+  holdingLeft: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
+    alignItems: 'center',
   },
-  actionButton: {
+  holdingIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  holdingInfo: {
+    marginLeft: 14,
     flex: 1,
-    borderRadius: 10,
+  },
+  holdingGrams: {
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  holdingRight: {
+    alignItems: 'flex-end',
+    marginTop: 8,
+  },
+  balanceCard: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    borderRadius: 14,
+  },
+  balanceContent: {
+    paddingVertical: 4,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addBtn: {
+    borderRadius: 20,
   },
   transactionsSection: {
-    padding: 10,
+    padding: 12,
+    marginTop: 8,
   },
   sectionTitle: {
     fontWeight: 'bold',
-    marginBottom: 15,
-    paddingHorizontal: 10,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   emptyCard: {
     borderRadius: 12,
