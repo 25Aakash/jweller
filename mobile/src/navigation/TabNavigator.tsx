@@ -5,6 +5,7 @@ import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/wallet/WalletScreen';
 import GoldScreen from '../screens/gold/GoldScreen';
 import SilverScreen from '../screens/silver/SilverScreen';
+import MarketScreen from '../screens/market/MarketScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import { useTheme } from '../context/ThemeContext';
 
@@ -53,10 +54,20 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
+        name="Market"
+        component={MarketScreen}
+        options={{
+          title: 'Market',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="chart-line" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Gold"
         component={GoldScreen}
         options={{
-          title: 'Gold Booking',
+          title: 'Gold',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="gold" size={size} color={color} />
           ),
@@ -66,7 +77,7 @@ export default function TabNavigator() {
         name="Silver"
         component={SilverScreen}
         options={{
-          title: 'Silver Booking',
+          title: 'Silver',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="circle-multiple" size={size} color={color} />
           ),

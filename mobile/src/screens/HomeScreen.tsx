@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Text, Card, Button, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { walletAPI, goldAPI, silverAPI } from '../api/endpoints';
 import { WalletBalance, GoldPrice, SilverPrice } from '../types';
 import { getGreeting } from '../utils/greetings';
+import { newsService, NewsArticle } from '../services/newsService';
 
 export default function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function HomeScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [topNews, setTopNews] = useState<NewsArticle[]>([]);
 
   const greeting = getGreeting();
 
@@ -35,6 +37,16 @@ export default function HomeScreen({ navigation }: any) {
       setGoldPrice(goldData);
       setSilverPrice(silverData);
       setLastUpdated(new Date());
+
+      // Load top 2 news articles for home widget
+      try {
+        const [gNews, sNews] = await Promise.all([
+          newsService.fetchGoldNews(),
+          newsService.fetchSilverNews(),
+        ]);
+        const combined = [...gNews.slice(0, 1), ...sNews.slice(0, 1)];
+        setTopNews(combined);
+      } catch {}
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -135,6 +147,62 @@ export default function HomeScreen({ navigation }: any) {
             </Text>
           </Card.Content>
         </Card>
+      </View>
+
+      {/* Market Snapshot Widget */}
+      <View style={styles.marketWidget}>
+        <View style={styles.marketWidgetHeader}>
+          <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text.primary, marginBottom: 0 }]}>
+            📈 Market
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Market' })}>
+            <Text style={{ color: theme.colors.primary.main, fontSize: 13, fontWeight: '600' }}>
+              View All →
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {topNews.length > 0 && (
+          <View style={styles.newsWidgetList}>
+            {topNews.map((article, idx) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('Main', { screen: 'Market' })}
+              >
+                <Card
+                  style={[
+                    styles.newsWidgetCard,
+                    { backgroundColor: theme.colors.background.card },
+                    isDark && styles.darkCardBorder,
+                  ]}
+                >
+                  <Card.Content style={styles.newsWidgetContent}>
+                    <View style={[styles.newsWidgetIcon, { backgroundColor: idx === 0 ? 'rgba(255,215,0,0.12)' : 'rgba(192,192,192,0.12)' }]}>
+                      <MaterialCommunityIcons
+                        name={idx === 0 ? 'gold' : 'circle-multiple'}
+                        size={20}
+                        color={idx === 0 ? '#FFD700' : '#C0C0C0'}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{ color: theme.colors.text.primary, fontSize: 13, fontWeight: '600', lineHeight: 18 }}
+                        numberOfLines={2}
+                      >
+                        {article.title}
+                      </Text>
+                      <Text style={{ color: theme.colors.text.disabled, fontSize: 11, marginTop: 2 }}>
+                        {article.source.name}
+                      </Text>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.text.disabled} />
+                  </Card.Content>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Quick Actions */}
@@ -245,5 +313,35 @@ const styles = StyleSheet.create({
   actionButton: {
     marginBottom: 10,
     borderRadius: 10,
+  },
+  marketWidget: {
+    paddingHorizontal: 20,
+    marginTop: 5,
+  },
+  marketWidgetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  newsWidgetList: {
+    gap: 8,
+  },
+  newsWidgetCard: {
+    borderRadius: 12,
+    elevation: 1,
+  },
+  newsWidgetContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  newsWidgetIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
