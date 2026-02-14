@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { Text, Card, Button, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -98,55 +98,94 @@ export default function HomeScreen({ navigation }: any) {
         </Text>
       </View>
 
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
-        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-          <Card.Content>
-            <MaterialCommunityIcons name="wallet" size={32} color={theme.colors.primary.main} />
-            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
-              ₹{wallet?.balance?.toFixed(0) || '0'}
-            </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Wallet Balance
-            </Text>
+      {/* Wallet Balance */}
+      <View style={styles.walletSection}>
+        <Card style={[styles.walletCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+          <Card.Content style={styles.walletContent}>
+            <View style={[styles.walletIconContainer, { backgroundColor: isDark ? 'rgba(212,168,67,0.12)' : 'rgba(184,134,11,0.08)' }]}>
+              <MaterialCommunityIcons name="wallet" size={28} color={theme.colors.primary.main} />
+            </View>
+            <View style={styles.walletInfo}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
+                Wallet Balance
+              </Text>
+              <Text variant="headlineMedium" style={[styles.walletValue, { color: theme.colors.text.primary }]}>
+                ₹{wallet?.balance?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.addMoneyBtn, { backgroundColor: theme.colors.primary.main }]}
+              onPress={() => navigation.navigate('AddMoney')}
+            >
+              <MaterialCommunityIcons name="plus" size={18} color="#fff" />
+              <Text style={styles.addMoneyText}>Add</Text>
+            </TouchableOpacity>
           </Card.Content>
         </Card>
+      </View>
 
-        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-          <Card.Content>
-            <MaterialCommunityIcons name="gold" size={32} color="#FFD700" />
-            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
-              ₹{goldPrice?.final_price?.toFixed(0) || '0'}
-            </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Gold Price/g
-            </Text>
-          </Card.Content>
-        </Card>
+      {/* Price Grid - 2x2 */}
+      <View style={styles.priceSection}>
+        <Text variant="titleMedium" style={[styles.priceSectionTitle, { color: theme.colors.text.secondary }]}>
+          Live Prices
+        </Text>
+        <View style={styles.priceGrid}>
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.priceCardContent}>
+              <View style={[styles.priceIconBg, { backgroundColor: 'rgba(255,215,0,0.12)' }]}>
+                <MaterialCommunityIcons name="gold" size={22} color="#FFD700" />
+              </View>
+              <Text variant="titleMedium" style={[styles.priceValue, { color: theme.colors.text.primary }]}>
+                ₹{goldPrice?.final_price?.toFixed(0) || '0'}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Gold Price/g
+              </Text>
+            </Card.Content>
+          </Card>
 
-        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-          <Card.Content>
-            <MaterialCommunityIcons name="circle-multiple" size={32} color="#C0C0C0" />
-            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
-              ₹{silverPrice?.final_price?.toFixed(0) || '0'}
-            </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Silver Price/g
-            </Text>
-          </Card.Content>
-        </Card>
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.priceCardContent}>
+              <View style={[styles.priceIconBg, { backgroundColor: 'rgba(192,192,192,0.15)' }]}>
+                <MaterialCommunityIcons name="circle-multiple" size={22} color="#C0C0C0" />
+              </View>
+              <Text variant="titleMedium" style={[styles.priceValue, { color: theme.colors.text.primary }]}>
+                ₹{silverPrice?.final_price?.toFixed(0) || '0'}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Silver Price/g
+              </Text>
+            </Card.Content>
+          </Card>
 
-        <Card style={[styles.statCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
-          <Card.Content>
-            <MaterialCommunityIcons name="currency-inr" size={32} color={theme.colors.warning} />
-            <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text.primary }]}>
-              ₹{goldPrice?.base_mcx_price?.toFixed(0) || '0'}
-            </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.text.secondary }}>
-              Gold MCX
-            </Text>
-          </Card.Content>
-        </Card>
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.priceCardContent}>
+              <View style={[styles.priceIconBg, { backgroundColor: isDark ? 'rgba(255,183,77,0.15)' : 'rgba(255,183,77,0.10)' }]}>
+                <MaterialCommunityIcons name="currency-inr" size={22} color={theme.colors.warning} />
+              </View>
+              <Text variant="titleMedium" style={[styles.priceValue, { color: theme.colors.text.primary }]}>
+                ₹{goldPrice?.base_mcx_price?.toFixed(0) || '0'}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Gold MCX
+              </Text>
+            </Card.Content>
+          </Card>
+
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
+            <Card.Content style={styles.priceCardContent}>
+              <View style={[styles.priceIconBg, { backgroundColor: 'rgba(192,192,192,0.15)' }]}>
+                <MaterialCommunityIcons name="currency-inr" size={22} color="#C0C0C0" />
+              </View>
+              <Text variant="titleMedium" style={[styles.priceValue, { color: theme.colors.text.primary }]}>
+                ₹{silverPrice?.base_mcx_price?.toFixed(0) || '0'}
+              </Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.text.secondary }}>
+                Silver MCX
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
       </View>
 
       {/* Market Snapshot Widget */}
@@ -279,29 +318,92 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 16 : 56,
   },
   headerName: {
     fontWeight: 'bold',
     marginVertical: 4,
   },
-  statsGrid: {
+  walletSection: {
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
+  walletCard: {
+    borderRadius: 16,
+    elevation: 2,
+  },
+  walletContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  walletIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  walletInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  walletValue: {
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  addMoneyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
+  },
+  addMoneyText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  priceSection: {
+    paddingHorizontal: 16,
+    marginTop: 18,
+  },
+  priceSectionTitle: {
+    fontWeight: '600',
+    marginBottom: 10,
+    marginLeft: 2,
+  },
+  priceGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 10,
     justifyContent: 'space-between',
   },
-  statCard: {
+  priceCard: {
     width: '48%',
-    marginBottom: 15,
+    marginBottom: 12,
+    borderRadius: 14,
+    elevation: 1,
+  },
+  priceCardContent: {
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  priceIconBg: {
+    width: 42,
+    height: 42,
     borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  priceValue: {
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
   darkCardBorder: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-  },
-  statValue: {
-    fontWeight: 'bold',
-    marginTop: 10,
   },
   quickActions: {
     padding: 20,

@@ -6,6 +6,7 @@ import CustomersScreen from '../screens/jeweller/CustomersScreen';
 import AllTransactionsScreen from '../screens/jeweller/AllTransactionsScreen';
 import AllBookingsScreen from '../screens/jeweller/AllBookingsScreen';
 import JewellerSettingsScreen from '../screens/jeweller/JewellerSettingsScreen';
+import MarketScreen from '../screens/market/MarketScreen';
 import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -19,20 +20,16 @@ export default function JewellerTabNavigator() {
         tabBarActiveTintColor: theme.colors.primary.main,
         tabBarInactiveTintColor: theme.colors.text.disabled,
         tabBarStyle: {
-          backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : '#E0E0E0',
-          borderTopWidth: 0.5,
-        },
-        headerStyle: {
-          backgroundColor: isDark ? '#1E1E1E' : theme.colors.primary.dark,
+          backgroundColor: theme.colors.background.primary,
+          borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
         },
-        headerTintColor: isDark ? theme.colors.text.primary : '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
-        headerShown: true,
+        headerShown: false,
       }}
     >
       <Tab.Screen
@@ -72,6 +69,16 @@ export default function JewellerTabNavigator() {
           tabBarLabel: 'Bookings',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="gold" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Market"
+        component={MarketScreen}
+        options={{
+          tabBarLabel: 'Market',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="chart-line" size={size} color={color} />
           ),
         }}
       />

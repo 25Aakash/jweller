@@ -20,17 +20,16 @@ export default function TabNavigator() {
         tabBarActiveTintColor: theme.colors.primary.main,
         tabBarInactiveTintColor: theme.colors.text.disabled,
         tabBarStyle: {
-          backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
-          borderTopWidth: 0.5,
+          backgroundColor: theme.colors.background.primary,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        headerStyle: {
-          backgroundColor: isDark ? '#1E1E1E' : theme.colors.primary.dark,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerShown: false,
       }}
     >
       <Tab.Screen

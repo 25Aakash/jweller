@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Platform, StatusBar } from 'react-native';
 import { Text, Card, Button, List, SegmentedButtons } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -70,24 +70,6 @@ export default function JewellerSettingsScreen({ navigation }: any) {
       <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }]}>
         <Card.Content>
           <Text variant="titleLarge" style={[styles.title, { color: theme.colors.text.primary }]}>
-            Gold Price Management
-          </Text>
-          <Button
-            mode="contained"
-            icon="cash-plus"
-            style={styles.button}
-            buttonColor={theme.colors.primary.main}
-            textColor="#fff"
-            onPress={() => navigation.navigate('GoldPrice')}
-          >
-            Update Gold Price
-          </Button>
-        </Card.Content>
-      </Card>
-
-      <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }]}>
-        <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.text.primary }]}>
             Account
           </Text>
           <Button
@@ -114,6 +96,7 @@ export default function JewellerSettingsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 48,
   },
   card: {
     margin: 10,

@@ -1,24 +1,26 @@
 /**
- * Dark Theme Configuration
- * Instagram / WhatsApp inspired — warm dark grays, not pure black
+ * Black & Gold — Dark Theme
+ * Premium dark mode with warm gold accents
+ * Deep blacks with gold highlights for a luxury jewellery feel
  */
 
 import { Theme } from './theme';
 
 export const darkTheme: Theme = {
     colors: {
+        // Gold accents on dark
         primary: {
-            light: '#7C8AFF',
-            main: '#818CF8',
-            dark: '#A5B4FC',
-            pastel: '#3B3F7A',
+            light: '#E8C872', // Light gold
+            main: '#D4A843', // Rich gold — main CTA
+            dark: '#F0D078', // Bright gold — headers on dark
+            pastel: '#3D2E14', // Dark gold-brown tint
         },
 
         secondary: {
             light: '#34D399',
             main: '#6EE7B7',
             dark: '#A7F3D0',
-            pastel: '#1A3D30',
+            pastel: '#1A3D2A',
         },
 
         accent: {
@@ -28,18 +30,19 @@ export const darkTheme: Theme = {
             mint: '#5EEAD4',
         },
 
+        // Dark gold gradients
         gradients: {
-            primary: ['#2D3162', '#3B3F7A', '#4F46E5'] as readonly [string, string, string],
-            secondary: ['#1A3D30', '#1E5040', '#10B981'] as readonly [string, string, string],
-            sunset: ['#3D2E2E', '#3B2D4A', '#4F46E5'] as readonly [string, string, string],
-            ocean: ['#1A3D38', '#1E4040', '#2D3162'] as readonly [string, string, string],
+            primary: ['#1A1508', '#2D2210', '#3D2E14'] as readonly [string, string, string],
+            secondary: ['#0F1F17', '#1A3D2A', '#10B981'] as readonly [string, string, string],
+            sunset: ['#2D1A1A', '#3D2E14', '#D4A843'] as readonly [string, string, string],
+            ocean: ['#0F1F1C', '#1A3D2A', '#2D2210'] as readonly [string, string, string],
         },
 
         glass: {
-            light: 'rgba(255, 255, 255, 0.06)',
-            medium: 'rgba(255, 255, 255, 0.10)',
-            dark: 'rgba(255, 255, 255, 0.04)',
-            border: 'rgba(255, 255, 255, 0.12)',
+            light: 'rgba(212, 168, 67, 0.06)',
+            medium: 'rgba(212, 168, 67, 0.10)',
+            dark: 'rgba(212, 168, 67, 0.04)',
+            border: 'rgba(212, 168, 67, 0.15)',
         },
 
         success: '#34D399',
@@ -47,23 +50,24 @@ export const darkTheme: Theme = {
         warning: '#FBBF24',
         info: '#60A5FA',
 
-        // Instagram/WhatsApp style dark — warm dark grays, not pure black
+        // Deep blacks with warm undertone
         background: {
-            primary: '#121212',     // Main bg (like Instagram dark)
-            secondary: '#1E1E1E',   // Slightly elevated (like WhatsApp chat bg)
-            tertiary: '#2A2A2A',    // Cards/surfaces
-            card: '#1E1E1E',        // Card background
+            primary: '#0C0A08', // Near-black with warm brown undertone
+            secondary: '#161310', // Slightly warm elevated
+            tertiary: '#211D18', // Card surfaces — warm charcoal
+            card: '#161310',
         },
 
+        // Warm-tinted text
         text: {
-            primary: '#F5F5F5',     // Primary text — soft white
-            secondary: '#A0A0A0',   // Secondary — muted gray
-            disabled: '#666666',    // Disabled
-            hint: '#505050',        // Hints
+            primary: '#F5F0E8', // Warm white
+            secondary: '#A89A88', // Warm muted
+            disabled: '#6B5F52', // Warm disabled
+            hint: '#4A4036', // Warm hints
         },
 
-        overlay: 'rgba(0, 0, 0, 0.6)',
-        backdrop: 'rgba(0, 0, 0, 0.4)',
+        overlay: 'rgba(0, 0, 0, 0.65)',
+        backdrop: 'rgba(0, 0, 0, 0.45)',
     },
 
     typography: {
@@ -116,21 +120,21 @@ export const darkTheme: Theme = {
         sm: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.4,
+            shadowOpacity: 0.5,
             shadowRadius: 4,
             elevation: 3,
         },
         md: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.5,
+            shadowOpacity: 0.6,
             shadowRadius: 8,
             elevation: 5,
         },
         lg: {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.6,
+            shadowOpacity: 0.7,
             shadowRadius: 16,
             elevation: 8,
         },

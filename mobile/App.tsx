@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import * as Updates from 'expo-updates';
 import RegisterScreen from './src/screens/RegisterScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -29,11 +29,12 @@ const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { theme, isDark } = useTheme();
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary.main} />
       </View>
     );
   }
@@ -45,9 +46,9 @@ function AppNavigator() {
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#6200ee',
+            backgroundColor: isDark ? theme.colors.background.secondary : theme.colors.primary.dark,
           },
-          headerTintColor: '#fff',
+          headerTintColor: isDark ? theme.colors.text.primary : '#fff',
           headerTitleStyle: {
             fontWeight: 'bold',
           },

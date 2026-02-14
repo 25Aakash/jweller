@@ -83,11 +83,12 @@ export default function SilverPriceScreen({ navigation }: any) {
             onChangeText={setBaseMcxPrice}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
             outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
             activeOutlineColor={theme.colors.primary.main}
             textColor={theme.colors.text.primary}
+            theme={{ colors: { onSurfaceVariant: theme.colors.text.secondary } }}
           />
 
           <Button
@@ -109,12 +110,13 @@ export default function SilverPriceScreen({ navigation }: any) {
             onChangeText={setMarginPercent}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
             placeholder="0"
             outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
             activeOutlineColor={theme.colors.primary.main}
             textColor={theme.colors.text.primary}
+            theme={{ colors: { onSurfaceVariant: theme.colors.text.secondary } }}
           />
 
           <TextInput
@@ -123,15 +125,16 @@ export default function SilverPriceScreen({ navigation }: any) {
             onChangeText={setMarginFixed}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
             placeholder="0"
             outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
             activeOutlineColor={theme.colors.primary.main}
             textColor={theme.colors.text.primary}
+            theme={{ colors: { onSurfaceVariant: theme.colors.text.secondary } }}
           />
 
-          <Card style={[styles.priceCard, { backgroundColor: '#757575' }]}>
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.primary.dark }]}>
             <Card.Content>
               <Text variant="bodySmall" style={styles.priceLabel}>
                 Final Silver Price
@@ -156,7 +159,7 @@ export default function SilverPriceScreen({ navigation }: any) {
         </Card.Content>
       </Card>
 
-      <Card style={[styles.infoCard, { backgroundColor: isDark ? theme.colors.background.card : '#e3f2fd' }, isDark && styles.darkCardBorder]}>
+      <Card style={[styles.infoCard, { backgroundColor: isDark ? theme.colors.background.card : theme.colors.primary.light }, isDark && styles.darkCardBorder]}>
         <Card.Content>
           <Text variant="titleMedium" style={[styles.infoTitle, { color: theme.colors.text.primary }]}>
             💡 How it works
@@ -212,6 +215,7 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     marginBottom: 15,
+    borderRadius: 10,
   },
   infoCard: {
     margin: 15,

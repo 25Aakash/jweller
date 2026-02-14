@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Platform, StatusBar } from 'react-native';
 import { Text, TextInput, Button, Card, ActivityIndicator } from 'react-native-paper';
 import { jewellerAPI, goldAPI } from '../../api/endpoints';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function GoldPriceScreen({ navigation }: any) {
+  const { theme, isDark } = useTheme();
   const [baseMcxPrice, setBaseMcxPrice] = useState('');
   const [marginPercent, setMarginPercent] = useState('');
   const [marginFixed, setMarginFixed] = useState('');
@@ -68,10 +70,10 @@ export default function GoldPriceScreen({ navigation }: any) {
   const finalPrice = calculateFinalPrice();
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background.primary }]}>
+      <Card style={[styles.card, { backgroundColor: theme.colors.background.card }, isDark && styles.darkCardBorder]}>
         <Card.Content>
-          <Text variant="titleLarge" style={styles.title}>
+          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.text.primary }]}>
             Update Gold Price
           </Text>
 
@@ -81,8 +83,16 @@ export default function GoldPriceScreen({ navigation }: any) {
             onChangeText={setBaseMcxPrice}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
+            outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            theme={{
+              colors: {
+                onSurfaceVariant: theme.colors.text.secondary,
+              },
+            }}
           />
 
           <Button
@@ -90,7 +100,8 @@ export default function GoldPriceScreen({ navigation }: any) {
             onPress={fetchLivePrice}
             loading={fetchingLive}
             disabled={fetchingLive || loading}
-            style={styles.refreshButton}
+            style={[styles.refreshButton, { borderColor: theme.colors.primary.main }]}
+            textColor={theme.colors.primary.main}
             icon="refresh"
             compact
           >
@@ -103,9 +114,17 @@ export default function GoldPriceScreen({ navigation }: any) {
             onChangeText={setMarginPercent}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
             placeholder="0"
+            outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            theme={{
+              colors: {
+                onSurfaceVariant: theme.colors.text.secondary,
+              },
+            }}
           />
 
           <TextInput
@@ -114,15 +133,23 @@ export default function GoldPriceScreen({ navigation }: any) {
             onChangeText={setMarginFixed}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? theme.colors.background.tertiary : '#FFFFFF' }]}
             disabled={loading}
             placeholder="0"
+            outlineColor={isDark ? 'rgba(255,255,255,0.2)' : undefined}
+            activeOutlineColor={theme.colors.primary.main}
+            textColor={theme.colors.text.primary}
+            theme={{
+              colors: {
+                onSurfaceVariant: theme.colors.text.secondary,
+              },
+            }}
           />
 
-          <Card style={styles.priceCard}>
+          <Card style={[styles.priceCard, { backgroundColor: theme.colors.primary.dark }]}>
             <Card.Content>
               <Text variant="bodySmall" style={styles.priceLabel}>
-                Final Price
+                Final Gold Price
               </Text>
               <Text variant="headlineLarge" style={styles.finalPrice}>
                 ₹{finalPrice.toFixed(2)}/g
@@ -136,6 +163,8 @@ export default function GoldPriceScreen({ navigation }: any) {
             loading={loading}
             disabled={loading || !baseMcxPrice}
             style={styles.button}
+            buttonColor={theme.colors.primary.main}
+            textColor="#fff"
             icon="check"
           >
             Update Price
@@ -143,12 +172,12 @@ export default function GoldPriceScreen({ navigation }: any) {
         </Card.Content>
       </Card>
 
-      <Card style={styles.infoCard}>
+      <Card style={[styles.infoCard, { backgroundColor: isDark ? theme.colors.background.card : theme.colors.primary.light }, isDark && styles.darkCardBorder]}>
         <Card.Content>
-          <Text variant="titleMedium" style={styles.infoTitle}>
+          <Text variant="titleMedium" style={[styles.infoTitle, { color: theme.colors.text.primary }]}>
             💡 How it works
           </Text>
-          <Text variant="bodySmall" style={styles.infoText}>
+          <Text variant="bodySmall" style={[styles.infoText, { color: theme.colors.text.secondary }]}>
             • Base MCX Price: Auto-fetched from live market{'\n'}
             • Margin %: Your percentage markup{'\n'}
             • Fixed Margin: Additional fixed amount{'\n'}
@@ -164,10 +193,14 @@ export default function GoldPriceScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   card: {
     margin: 15,
+    borderRadius: 12,
+  },
+  darkCardBorder: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   title: {
     fontWeight: 'bold',
@@ -177,8 +210,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   priceCard: {
-    backgroundColor: '#6200ee',
     marginVertical: 20,
+    borderRadius: 10,
   },
   priceLabel: {
     color: '#fff',
@@ -191,14 +224,16 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 8,
+    borderRadius: 10,
   },
   refreshButton: {
     marginBottom: 15,
+    borderRadius: 10,
   },
   infoCard: {
     margin: 15,
     marginTop: 0,
-    backgroundColor: '#e3f2fd',
+    borderRadius: 12,
   },
   infoTitle: {
     fontWeight: 'bold',

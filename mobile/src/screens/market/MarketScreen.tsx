@@ -8,6 +8,8 @@ import {
   Dimensions,
   Linking,
   Image,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Text, Card, ActivityIndicator, Chip, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -542,6 +544,7 @@ const styles = StyleSheet.create({
   metalToggle: {
     flexDirection: 'row',
     padding: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 12 : 52,
     gap: 12,
   },
   metalTab: {

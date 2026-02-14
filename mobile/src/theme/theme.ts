@@ -1,73 +1,74 @@
 /**
- * Minimalist Clean Theme
- * Soft pastels with light backgrounds - Modern banking app style
+ * Royal Gold — Light Theme
+ * Premium jewellery-inspired warm gold & ivory palette
+ * Inspired by Gullak / Tanishq / luxury gold-savings apps
  */
 
 export const theme = {
     colors: {
-        // Soft Pastel Primary Colors
+        // Gold Primary Colors
         primary: {
-            light: '#E0E7FF', // Very light indigo
-            main: '#818CF8', // Soft indigo
-            dark: '#6366F1', // Medium indigo
-            pastel: '#C7D2FE', // Pastel indigo
+            light: '#FFF3D6', // Light gold wash
+            main: '#B8860B', // Rich dark goldenrod — main CTA
+            dark: '#8B6914', // Deep gold — headers
+            pastel: '#FCEBC8', // Pastel gold
         },
 
         secondary: {
-            light: '#D1FAE5', // Very light emerald
-            main: '#6EE7B7', // Soft emerald
-            dark: '#34D399', // Medium emerald
-            pastel: '#A7F3D0', // Pastel emerald
+            light: '#F0FDF4', // Soft mint
+            main: '#34D399', // Emerald green — success accent
+            dark: '#059669', // Deep emerald
+            pastel: '#D1FAE5', // Pastel green
         },
 
         accent: {
-            pink: '#FBCFE8', // Soft pink
-            peach: '#FED7AA', // Soft peach
-            lavender: '#DDD6FE', // Soft lavender
-            mint: '#CCFBF1', // Soft mint
+            pink: '#FDE2E2', // Soft rose
+            peach: '#FDE8D0', // Warm peach
+            lavender: '#EDE9FE', // Soft lavender
+            mint: '#D5F5F0', // Soft mint
         },
 
-        // Soft Gradients
+        // Warm Gold Gradients
         gradients: {
-            primary: ['#E0E7FF', '#C7D2FE', '#A5B4FC'] as readonly [string, string, string],
-            secondary: ['#D1FAE5', '#A7F3D0', '#6EE7B7'] as readonly [string, string, string],
-            sunset: ['#FED7AA', '#FBCFE8', '#DDD6FE'] as readonly [string, string, string],
-            ocean: ['#CCFBF1', '#A7F3D0', '#C7D2FE'] as readonly [string, string, string],
+            primary: ['#FFF8E7', '#FCEBC8', '#F5D791'] as readonly [string, string, string],
+            secondary: ['#F0FDF4', '#D1FAE5', '#6EE7B7'] as readonly [string, string, string],
+            sunset: ['#FDE8D0', '#FDE2E2', '#EDE9FE'] as readonly [string, string, string],
+            ocean: ['#D5F5F0', '#D1FAE5', '#FCEBC8'] as readonly [string, string, string],
         },
 
         // Glassmorphism
         glass: {
-            light: 'rgba(255, 255, 255, 0.7)',
-            medium: 'rgba(255, 255, 255, 0.5)',
-            dark: 'rgba(255, 255, 255, 0.3)',
-            border: 'rgba(255, 255, 255, 0.8)',
+            light: 'rgba(255, 255, 255, 0.75)',
+            medium: 'rgba(255, 255, 255, 0.55)',
+            dark: 'rgba(255, 255, 255, 0.35)',
+            border: 'rgba(218, 165, 32, 0.2)',
         },
 
         // Semantic Colors
-        success: '#34D399',
-        error: '#F87171',
-        warning: '#FBBF24',
-        info: '#60A5FA',
+        success: '#059669',
+        error: '#DC2626',
+        warning: '#D97706',
+        info: '#2563EB',
 
-        // Light Backgrounds
+        // Warm Ivory Backgrounds
         background: {
-            primary: '#FAFAFA', // Very light gray
-            secondary: '#FFFFFF', // Pure white
-            tertiary: '#F5F5F5', // Light gray
+            primary: '#FFFDF7', // Warm ivory
+            secondary: '#FFFFFF', // White
+            tertiary: '#FFF9F0', // Cream
             card: '#FFFFFF',
         },
 
-        // Text Colors
+        // Warm Text Colors
         text: {
-            primary: '#1F2937', // Dark gray
-            secondary: '#6B7280', // Medium gray
-            disabled: '#9CA3AF', // Light gray
-            hint: '#D1D5DB', // Very light gray
+            primary: '#2C1810', // Deep warm brown
+            secondary: '#6B5744', // Medium brown
+            disabled: '#A89585', // Warm gray
+            hint: '#D1C4B5', // Light warm gray
         },
 
         // Overlays
-        overlay: 'rgba(0, 0, 0, 0.1)',
-        backdrop: 'rgba(0, 0, 0, 0.05)',
+        overlay: 'rgba(44, 24, 16, 0.08)',
+        backdrop: 'rgba(44, 24, 16, 0.04)',
     },
 
     typography: {
@@ -110,7 +111,6 @@ export const theme = {
         round: 999,
     },
 
-    // Glassmorphism blur values
     blur: {
         sm: 10,
         md: 20,
@@ -119,23 +119,23 @@ export const theme = {
 
     shadows: {
         sm: {
-            shadowColor: '#000',
+            shadowColor: '#8B6914',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
+            shadowOpacity: 0.06,
             shadowRadius: 4,
             elevation: 2,
         },
         md: {
-            shadowColor: '#000',
+            shadowColor: '#8B6914',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
             shadowRadius: 8,
             elevation: 4,
         },
         lg: {
-            shadowColor: '#000',
+            shadowColor: '#8B6914',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.1,
+            shadowOpacity: 0.10,
             shadowRadius: 16,
             elevation: 8,
         },

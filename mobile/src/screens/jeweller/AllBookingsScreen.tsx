@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, Platform, StatusBar } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, Searchbar, Button } from 'react-native-paper';
 import { jewellerAPI } from '../../api/endpoints';
 import { useTheme } from '../../context/ThemeContext';
@@ -128,6 +128,7 @@ export default function AllBookingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 8 : 48,
   },
   loadingContainer: {
     flex: 1,
